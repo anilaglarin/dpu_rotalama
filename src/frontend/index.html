@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <title>DPÜ Rotalama Sistemi</title>
+    <!-- Leaflet.js Kütüphanesi -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    
+    <!-- Bizim Tasarım Dosyamız -->
+    <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+    <div id="kontrol-paneli">
+        <h3>📍 DPÜ Kampüs Rotalama</h3>
+        
+        <datalist id="noktalar-listesi"></datalist>
+
+        <div class="girdi-grubu">
+            <label>Nereden:</label>
+            <input type="text" id="baslangic-secim" list="noktalar-listesi" placeholder="Bina adı yazın veya seçin...">
+        </div>
+        
+        <div class="girdi-grubu">
+            <label>Nereye:</label>
+            <input type="text" id="bitis-secim" list="noktalar-listesi" placeholder="Bina adı yazın veya seçin...">
+        </div>
+        
+        <button onclick="rotaCiz()">Rotayı Bul</button>
+        <p id="durum">Hedeflerinizi arayın veya seçin</p>
+    </div>
+
+    <div id="harita"></div>
+
+    <!-- Bizim Mantık Dosyamız (Sayfa yüklendikten sonra çalışması için en altta) -->
+    <script src="app.js"></script>
+</body>
+</html>

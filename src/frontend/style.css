@@ -1,0 +1,23 @@
+body { margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+#harita { width: 100vw; height: 100vh; } 
+
+#kontrol-paneli {
+    position: absolute; top: 15px; left: 15px; z-index: 1000;
+    background: white; padding: 20px; border-radius: 12px;
+    box-shadow: 0 6px 12px rgba(0,0,0,0.15); width: 280px;
+}
+#kontrol-paneli h3 { margin-top: 0; color: #2c3e50; font-size: 18px; border-bottom: 2px solid #3498db; padding-bottom: 8px;}
+.girdi-grubu { margin-bottom: 15px; }
+.girdi-grubu label { display: block; font-size: 13px; color: #7f8c8d; margin-bottom: 4px; font-weight: bold;}
+
+.girdi-grubu input { 
+    width: 100%; padding: 8px; border: 1px solid #bdc3c7; 
+    border-radius: 6px; font-size: 14px; box-sizing: border-box;
+}
+
+button { 
+    width: 100%; padding: 10px; background-color: #3498db; color: white; 
+    border: none; border-radius: 6px; font-size: 15px; font-weight: bold; cursor: pointer; transition: 0.2s;
+}
+button:hover { background-color: #2980b9; }
+#durum { margin-top: 15px; font-size: 13px; color: #e67e22; font-weight: bold; text-align: center; margin-bottom: 0;}
