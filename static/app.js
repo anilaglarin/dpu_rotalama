@@ -8,7 +8,7 @@ var map = L.map('harita', {
 
 L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
 
-fetch('./data/kampus_binalar.geojson')
+fetch('/static/data/kampus_binalar.geojson')
     .then(cevap => cevap.json())
     .then(veri => {
         L.geoJSON(veri, { style: { color: "#2c3e50", weight: 2, fillOpacity: 0.4 } }).addTo(map);
@@ -100,7 +100,7 @@ let hedefIcon = L.divIcon({
     iconAnchor: [10, 20] 
 });
 
-fetch('./data/kampus_hedefler.geojson')
+fetch('/static/data/kampus_hedefler.geojson')
     .then(cevap => cevap.json())
     .then(veri => {
         L.geoJSON(veri, {
@@ -149,7 +149,7 @@ function rotaCiz() {
 
     document.getElementById('durum').innerText = "Rota hesaplanıyor... ⏳";
 
-    fetch('http://127.0.0.1:5000/api/rota', {
+    fetch('/api/rota', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ baslangic: basKoor, bitis: bitKoor })
