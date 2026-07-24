@@ -3,27 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <title>DPÜ Rotalama Sistemi</title>
-    <!-- Leaflet.js Kütüphanesi -->
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-    
-    <!-- Bizim Tasarım Dosyamız -->
     <link rel="stylesheet" href="style.css" />
 </head>
 <body>
     <div id="kontrol-paneli">
         <h3>📍 DPÜ Kampüs Rotalama</h3>
-        
-        <datalist id="noktalar-listesi"></datalist>
 
-        <div class="girdi-grubu">
+        <div class="girdi-grubu arama-kutusu">
             <label>Nereden:</label>
-            <input type="text" id="baslangic-secim" list="noktalar-listesi" placeholder="Bina adı yazın veya seçin...">
+            <input type="text" id="baslangic-secim" placeholder="Bina adı yazın veya seçin..." autocomplete="off">
+            <div id="baslangic-liste" class="acilir-liste"></div>
         </div>
         
-        <div class="girdi-grubu">
+        <div class="girdi-grubu arama-kutusu">
             <label>Nereye:</label>
-            <input type="text" id="bitis-secim" list="noktalar-listesi" placeholder="Bina adı yazın veya seçin...">
+            <input type="text" id="bitis-secim" placeholder="Bina adı yazın veya seçin..." autocomplete="off">
+            <div id="bitis-liste" class="acilir-liste"></div>
         </div>
         
         <button onclick="rotaCiz()">Rotayı Bul</button>
@@ -32,7 +29,6 @@
 
     <div id="harita"></div>
 
-    <!-- Bizim Mantık Dosyamız (Sayfa yüklendikten sonra çalışması için en altta) -->
     <script src="app.js"></script>
 </body>
 </html>

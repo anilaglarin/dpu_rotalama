@@ -21,3 +21,27 @@ button {
 }
 button:hover { background-color: #2980b9; }
 #durum { margin-top: 15px; font-size: 13px; color: #e67e22; font-weight: bold; text-align: center; margin-bottom: 0;}
+
+/* GPS Canlı Konum Animasyonu */
+.gps-noktasi {
+    background-color: #3498db;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 0 0 rgba(52, 152, 219, 0.6);
+    animation: pulse 1.5s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7); }
+    70% { box-shadow: 0 0 0 15px rgba(52, 152, 219, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); }
+}
+
+/* Hedef Noktaları (Kırmızı Pin) Tasarımı */
+.hedef-pin {
+    background-color: #e74c3c;
+    border-radius: 50% 50% 50% 0;
+    border: 2px solid white;
+    transform: rotate(-45deg); /* Damla şeklini dik konuma getirir */
+    box-shadow: -2px 2px 4px rgba(0,0,0,0.3);
+}
