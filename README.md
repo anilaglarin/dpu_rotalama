@@ -18,6 +18,8 @@ Bu proje, **Bursa Büyükşehir Belediyesi Trafik Şube Müdürlüğü**'nde tam
 
 > ⏳ **Not:** Uygulama ücretsiz bir sunucuda barındırılıyor. Siteye birkaç dakika boyunca hiç girilmezse sunucu "uyku moduna" geçer. Bu durumda linke ilk tıkladığınızda sayfanın açılması **20-30 saniye** sürebilir (sunucu "uyanıyor"). Bu normal bir durumdur, sayfa yenilenmeden bekleyin. Sunucu uyandıktan sonra site normal hızda çalışır.
 
+![DPÜ Kampüs Rotalama Ekran Görüntüsü](screenshots/demo.png)
+
 ---
 
 ## 🚀 Kullanılan Teknolojiler
