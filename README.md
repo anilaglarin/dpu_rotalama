@@ -6,6 +6,12 @@ Projenin temel amacı; gerçek harita koordinatları üzerinden alınan fiziksel
 
 ---
 
+## 🎓 Proje Hakkında
+
+Bu proje, **Bursa Büyükşehir Belediyesi Trafik Şube Müdürlüğü**'nde tamamladığım donanım stajı sürecinde geliştirilmiştir. Staj boyunca Trafik Yönetim Merkezi (TYM) bünyesinde akıllı kavşakların merkezle haberleşme altyapısını, fiber optik hatları ve ağ cihazlarının çalışma prensiplerini sahada inceleme fırsatı buldum. Edindiğim bu teknik bilgiyi uygulamalı bir modellemeyle desteklemek amacıyla QGIS ile gerçek harita verileri üzerinde rota analizi gerçekleştirdim ve bu projeyi geliştirdim.
+
+---
+
 ## 🔗 Canlı Demo
 
 **[https://dpu-rotam.onrender.com/](https://dpu-rotam.onrender.com/)**
