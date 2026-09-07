@@ -156,7 +156,7 @@ Tarayıcınızdan aşağıdaki adrese giderek harita arayüzünü açabilirsiniz
 http://127.0.0.1:5000
 ```
 ---
-© Telif Hakkı
+📄© Telif Hakkı
 
 Tüm hakları saklıdır.
 
