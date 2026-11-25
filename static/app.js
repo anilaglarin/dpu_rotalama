@@ -1,8 +1,9 @@
-let kampusSinirlari = L.latLngBounds([39.465, 29.870], [39.500, 29.915]);
+// Dar telefon ekranında da kaydırılabilsin diye sınırlar kampüsten geniş tutulur
+let kampusSinirlari = L.latLngBounds([39.450, 29.850], [39.515, 29.935]);
 
 var map = L.map('harita', {
     maxBounds: kampusSinirlari,
-    maxBoundsViscosity: 1.0, 
+    maxBoundsViscosity: 0.7,
     minZoom: 14 
 }).setView([39.482, 29.891], 15);
 
@@ -26,6 +27,43 @@ let noktalar = ["Mevcut Konumum"];
 // Haritadan pine tıklanarak seçilen kutular için o pinin koordinatı
 let pinSecimi = new Map();
 
+// --- Telefon paneli ---
+const mobilEkran = window.matchMedia('(max-width: 768px)');
+let panel = document.getElementById('kontrol-paneli');
+let tutamac = document.getElementById('panel-tutamac');
+
+// Alttaki panel harita kaynak yazısını kapatmasın
+if (mobilEkran.matches) map.attributionControl.setPosition('topright');
+
+function paneliKapat(kapali) {
+    panel.classList.toggle('kapali', kapali);
+    tutamac.setAttribute('aria-expanded', String(!kapali));
+}
+
+function yazmaModunuAc(input) {
+    yazmaModunuKapat();
+    paneliKapat(false);
+    panel.classList.add('yaziyor');
+    input.closest('.girdi-grubu').classList.add('aktif');
+}
+
+function yazmaModunuKapat() {
+    panel.classList.remove('yaziyor');
+    panel.querySelectorAll('.aktif').forEach(grup => grup.classList.remove('aktif'));
+}
+
+// Tutamaca dokununca veya aşağı/yukarı kaydırınca panel kapanır/açılır
+let dokunusY = null;
+tutamac.addEventListener('click', () => paneliKapat(!panel.classList.contains('kapali')));
+tutamac.addEventListener('touchstart', e => { dokunusY = e.touches[0].clientY; }, { passive: true });
+tutamac.addEventListener('touchend', e => {
+    let fark = e.changedTouches[0].clientY - dokunusY;
+    if (Math.abs(fark) > 30) {
+        e.preventDefault();   // kaydırma ayrıca tıklama sayılmasın
+        paneliKapat(fark > 0);
+    }
+});
+
 // Türkçe harflere duyarlı arama: "iibf" yazınca "İİBF" bulunur
 function aramaIcinSadelestir(metin) {
     return metin.toLocaleLowerCase('tr').replace(/ı/g, 'i').trim();
@@ -43,6 +81,8 @@ function listeyiDoldur(input, listeDiv, tumunuGoster = false) {
             input.value = isim;
             pinSecimi.delete(input);
             listeDiv.style.display = "none";
+            input.blur();
+            yazmaModunuKapat();
             if(baslangicInput.value && bitisInput.value) rotaCiz();
         };
         listeDiv.appendChild(div);
@@ -57,7 +97,13 @@ function aramaKutusunuBagla(input, listeDiv) {
         setTimeout(() => input.select(), 0);
         listeyiDoldur(input, listeDiv, true);
     });
+    // 'focus' yerine 'click': panel yer değiştirirken dokunuş boşa düşmesin
+    input.addEventListener('click', () => {
+        yazmaModunuAc(input);
+        listeyiDoldur(input, listeDiv, true);
+    });
     input.addEventListener('input', () => {
+        yazmaModunuAc(input);
         pinSecimi.delete(input);
         listeyiDoldur(input, listeDiv);
     });
@@ -69,6 +115,9 @@ aramaKutusunuBagla(bitisInput, bitListe);
 document.addEventListener('click', function(e) {
     if (e.target !== baslangicInput) basListe.style.display = "none";
     if (e.target !== bitisInput) bitListe.style.display = "none";
+    if (e.target !== baslangicInput && e.target !== bitisInput && !e.target.closest('.acilir-liste')) {
+        yazmaModunuKapat();
+    }
 });
 
 // Haritadaki bir noktaya tıklanınca kutuları doldurur
@@ -177,8 +226,10 @@ map.locate({setView: false, watch: true, enableHighAccuracy: true});
 
 let hedefIcon = L.divIcon({
     className: 'hedef-pin',
-    iconSize: [20, 20],
-    iconAnchor: [10, 20] 
+    html: '<div class="hedef-pin-sekil"></div>',
+    iconSize: [30, 30],       // dokunma alanı; görünen boyut CSS'te
+    iconAnchor: [15, 30],
+    popupAnchor: [0, -22]
 });
 
 fetch('/static/data/kampus_hedefler.geojson')
@@ -259,7 +310,17 @@ function rotaCiz() {
             
             document.getElementById('durum').innerHTML = `Rota Çizildi! ✅ <br> 📏 Mesafe: ${mesafeMetre} m <br> 🚶 Süre: ~${sureDk} dk`;
             
-            map.fitBounds(rotaKatmani.getBounds(), { padding: [50, 50] });
+            if (mobilEkran.matches) {
+                // Paneli indir ve rotayı panelin üstünde kalan alana ortala
+                yazmaModunuKapat();
+                paneliKapat(true);
+                map.fitBounds(rotaKatmani.getBounds(), {
+                    paddingTopLeft: [30, 40],
+                    paddingBottomRight: [30, panel.offsetHeight + 20]
+                });
+            } else {
+                map.fitBounds(rotaKatmani.getBounds(), { padding: [50, 50] });
+            }
         } else {
             // Önceki rota ekranda kalıp yanıltmasın
             if (rotaKatmani) map.removeLayer(rotaKatmani);

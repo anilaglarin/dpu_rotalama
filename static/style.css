@@ -128,7 +128,14 @@ button:hover {
 }
 
 /* Hedef Noktaları (Kırmızı Pin) Tasarımı */
-.hedef-pin {
+/* Döndürme iç öğede: Leaflet dış öğenin transform değerini kendisi kullanır */
+.hedef-pin-sekil {
+    position: absolute;
+    top: 3px;
+    left: 4px;
+    width: 22px;
+    height: 22px;
+    box-sizing: border-box;
     background-color: #e74c3c;
     border-radius: 50% 50% 50% 0;
     border: 2px solid white;
@@ -173,18 +180,120 @@ button:hover {
     font-weight: bold; 
 }
 
+/* Panel tutamacı yalnızca telefonda görünür */
+#panel-tutamac {
+    display: none;
+}
+
 /* Mobil Uyumluluk (Responsive Tasarım) */
 @media (max-width: 768px) {
+    body {
+        overflow: hidden;
+    }
+
+    #harita {
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;   /* tarayıcı çubuğu hesaba katılır */
+    }
+
     #kontrol-paneli {
         position: absolute;
         bottom: 0;
         left: 0;
         top: auto;
         width: 100%;
-        border-radius: 20px 20px 0 0;
+        padding: 0 16px 14px;
+        border-radius: 18px 18px 0 0;
         box-shadow: 0 -4px 10px rgba(0,0,0,0.15);
-        max-height: 40vh;
+        max-height: 55vh;
         overflow-y: auto;
         box-sizing: border-box;
+    }
+
+    #panel-tutamac {
+        display: block;
+        height: 26px;
+        padding: 0;
+        background: transparent;
+        touch-action: none;
+    }
+
+    #panel-tutamac:hover {
+        background: transparent;
+    }
+
+    #panel-tutamac::before {
+        content: "";
+        display: block;
+        width: 44px;
+        height: 5px;
+        margin: 0 auto;
+        border-radius: 3px;
+        background: #bdc3c7;
+    }
+
+    #kontrol-paneli h3 {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+
+    .girdi-grubu {
+        margin-bottom: 8px;
+    }
+
+    .hedef-pin-sekil {
+        top: 11px;
+        left: 7px;
+        width: 16px;
+        height: 16px;
+    }
+
+    /* 16px altı yazıda iPhone sayfayı kendiliğinden yakınlaştırır */
+    .girdi-grubu input {
+        font-size: 16px;
+    }
+
+    #durum {
+        margin-top: 10px;
+    }
+
+    /* Kapalı panel: yalnızca tutamaç ve durum satırı */
+    #kontrol-paneli.kapali > :not(#panel-tutamac):not(#durum) {
+        display: none;
+    }
+
+    #kontrol-paneli.kapali #durum {
+        margin-top: 0;
+    }
+
+    #kontrol-paneli.kapali #durum br {
+        display: none;
+    }
+
+    /* Yazma modu: panel üste çıkar, klavye listeyi kapatmaz */
+    #kontrol-paneli.yaziyor {
+        top: 0;
+        bottom: auto;
+        z-index: 1100;
+        max-height: none;
+        padding-top: 12px;
+        border-radius: 0 0 18px 18px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+    }
+
+    #kontrol-paneli.yaziyor > :not(.aktif) {
+        display: none;
+    }
+
+    #kontrol-paneli.yaziyor .acilir-liste {
+        position: static;
+        max-height: 40vh;
+        max-height: 40dvh;
+    }
+
+    .acilir-liste div {
+        padding: 13px 10px;
+        font-size: 15px;
     }
 }
