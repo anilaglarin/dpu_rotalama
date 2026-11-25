@@ -92,7 +92,6 @@ button:hover {
     display: none;
     position: absolute;
     inset: 0;
-    filter: drop-shadow(0 0 2px white);
 }
 
 .gps-yon::before {
@@ -117,14 +116,22 @@ button:hover {
     background-color: #3498db;
     border-radius: 50%;
     border: 3px solid white;
-    box-shadow: 0 0 0 rgba(52, 152, 219, 0.6);
-    animation: pulse 1.5s infinite;
+}
+
+/* Yanıp sönen halka: yalnızca boyut ve saydamlık değişir, telefonu yormaz */
+.gps-noktasi::after {
+    content: "";
+    position: absolute;
+    inset: -3px;
+    border-radius: 50%;
+    background: rgba(52, 152, 219, 0.45);
+    z-index: -1;
+    animation: pulse 1.8s ease-out infinite;
 }
 
 @keyframes pulse {
-    0% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0.7); }
-    70% { box-shadow: 0 0 0 15px rgba(52, 152, 219, 0); }
-    100% { box-shadow: 0 0 0 0 rgba(52, 152, 219, 0); }
+    0%   { transform: scale(1);   opacity: 1; }
+    100% { transform: scale(2.2); opacity: 0; }
 }
 
 /* Hedef Noktaları (Kırmızı Pin) Tasarımı */
@@ -341,6 +348,7 @@ button:hover {
 }
 
 #paylas[hidden],
+#paylas-penceresi .secenek[hidden],
 #paylas-penceresi [hidden] {
     display: none;
 }
@@ -421,6 +429,131 @@ button:hover {
 
 #paylas-kapat,
 #paylas-kapat:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+/* Yakın yerleri toplayan sayılı daire */
+.kume span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    margin: 1px;
+    border: 3px solid white;
+    border-radius: 50%;
+    color: white;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+/* Kullanıcının işaretlediği nokta */
+.ozel-isaret span {
+    display: block;
+    font-size: 36px;
+    line-height: 44px;
+    text-align: center;
+}
+
+.nokta-modu #harita {
+    cursor: crosshair;
+}
+
+#nokta-eylemleri {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+}
+
+#nokta-eylemleri button {
+    padding: 8px 4px;
+    border: 1.5px solid #cbd5e1;
+    background: white;
+    color: #0f172a;
+    font-size: 13px;
+}
+
+#nokta-eylemleri button:hover {
+    background: #f1f5f9;
+}
+
+.bilgi-karti .kart-paylas {
+    margin-top: 6px;
+    border-color: #cbd5e1;
+    color: #0f172a;
+}
+
+/* Nokta formu */
+#nokta-penceresi {
+    width: min(340px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    box-sizing: border-box;
+    padding: 18px;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+}
+
+#nokta-penceresi::backdrop {
+    background: rgba(15, 23, 42, 0.55);
+}
+
+#nokta-penceresi h4 {
+    margin: 0;
+    font-size: 18px;
+    color: #0f172a;
+}
+
+#nokta-uyari {
+    margin: 6px 0 12px;
+    font-size: 12px;
+    color: #475569;
+}
+
+#nokta-penceresi label {
+    display: block;
+    margin-bottom: 10px;
+    font-size: 13px;
+    font-weight: bold;
+    color: #475569;
+}
+
+#nokta-penceresi input {
+    display: block;
+    width: 100%;
+    box-sizing: border-box;
+    margin-top: 4px;
+    padding: 9px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 16px;
+}
+
+#nokta-penceresi .saatler {
+    display: flex;
+    gap: 8px;
+}
+
+#nokta-penceresi .saatler label {
+    flex: 1;
+    min-width: 0;
+}
+
+#nokta-zaman[hidden] {
+    display: none;
+}
+
+#nokta-hata {
+    min-height: 1em;
+    margin: 0 0 8px;
+    font-size: 12px;
+    color: #c0392b;
+}
+
+#nokta-vazgec,
+#nokta-vazgec:hover {
+    margin-top: 6px;
     background: #e2e8f0;
     color: #0f172a;
 }
@@ -590,12 +723,13 @@ button:hover {
         font-size: 15px;
     }
 
-    .hedef-pin-sekil {
-        transition: transform 0.25s;
-    }
-
     .secili-pin .hedef-pin-sekil {
         transform: rotate(-45deg) scale(1.45);
+    }
+
+    #kontrol-paneli,
+    #yer-karti {
+        will-change: transform;
     }
 
     #panel-tutamac:hover {
@@ -626,6 +760,7 @@ button:hover {
         left: 7px;
         width: 22px;
         height: 22px;
+        box-shadow: none;    /* telefonda gölge kaydırmayı yavaşlatır */
     }
 
     .hedef-pin-sekil svg {

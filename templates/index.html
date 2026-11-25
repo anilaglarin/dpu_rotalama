@@ -36,6 +36,10 @@
             <button type="button" onclick="rotaCiz()">Rotayı Bul</button>
             <button type="button" id="temizle" class="ikincil" title="Temizle" aria-label="Temizle">✕</button>
         </div>
+        <div id="nokta-eylemleri">
+            <button type="button" id="nokta-isaretle">📌 Nokta işaretle</button>
+            <button type="button" id="buradayim">🙋 Buradayım</button>
+        </div>
         <p id="durum">Hedeflerinizi arayın veya seçin</p>
         <button type="button" id="paylas" hidden>🔗 Rotayı paylaş</button>
         <p id="gps-uyari"></p>
@@ -61,8 +65,35 @@
         <button type="button" id="paylas-kapat">Kapat</button>
     </dialog>
 
+    <dialog id="nokta-penceresi" aria-labelledby="nokta-baslik">
+        <form id="nokta-formu" novalidate>
+            <h4 id="nokta-baslik">Noktayı işaretle</h4>
+            <p id="nokta-uyari"></p>
+            <label>Ad
+                <input type="text" name="ad" maxlength="60" placeholder="Örn. Fotoğraf Kulübü tanışma" autocomplete="off">
+            </label>
+            <div id="nokta-zaman">
+                <label>Tarih (isteğe bağlı)
+                    <input type="date" name="tarih">
+                </label>
+                <div class="saatler">
+                    <label>Başlangıç
+                        <input type="time" name="saat">
+                    </label>
+                    <label>Bitiş
+                        <input type="time" name="bitis">
+                    </label>
+                </div>
+            </div>
+            <p id="nokta-hata" role="alert"></p>
+            <button type="submit">Link ve QR oluştur</button>
+            <button type="button" id="nokta-vazgec">Vazgeç</button>
+        </form>
+    </dialog>
+
     <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
     <script src="{{ url_for('static', filename='paylas.js') }}"></script>
+    <script src="{{ url_for('static', filename='nokta.js') }}"></script>
 </body>
 </html>
