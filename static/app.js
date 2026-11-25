@@ -3,11 +3,19 @@ let kampusSinirlari = L.latLngBounds([39.450, 29.850], [39.515, 29.935]);
 
 var map = L.map('harita', {
     maxBounds: kampusSinirlari,
-    maxBoundsViscosity: 0.7,
-    minZoom: 14 
+    maxBoundsViscosity: 0.3,   // kenarda sert direnç hissi olmasın
+    minZoom: 14,
+    // Binalar ve rota tek bir tuvale çizilir: kaydırma çok daha akıcı olur
+    renderer: L.canvas({ padding: 0.5 }),
+    preferCanvas: true
 }).setView([39.482, 29.891], 15);
 
-L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19, attribution: '© OpenStreetMap' }).addTo(map);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    maxZoom: 19,
+    attribution: '© OpenStreetMap',
+    updateWhenIdle: false,   // telefonda harita parçaları kaydırırken de yüklensin
+    keepBuffer: 4            // ekran dışındaki parçalar hazırda tutulsun
+}).addTo(map);
 
 fetch('/static/data/kampus_binalar.geojson')
     .then(cevap => cevap.json())
@@ -121,7 +129,7 @@ function kartiKapat() {
     seciliPin = null;
 }
 
-function kartiAc(hedef) {
+function kartiAc(icerik, isaretci) {
     kartiKapat();
     yazmaModunuKapat();
     kartNo++;
@@ -135,17 +143,31 @@ function kartiAc(hedef) {
     kapat.setAttribute('aria-label', "Kartı kapat");
     kapat.addEventListener('click', kartiKapat);
 
-    yerKarti.replaceChildren(tutma, kapat, bilgiKarti(hedef));
+    yerKarti.replaceChildren(tutma, kapat, icerik);
     yerKarti.classList.add('acik');
     panel.classList.add('kart-acik');
 
-    seciliPin = hedef.isaretci.getElement();
-    seciliPin.classList.add('secili-pin');
+    seciliPin = isaretci.getElement() || null;
+    if (seciliPin) seciliPin.classList.add('secili-pin');
     // Seçilen pin kartın altında kalmasın
-    map.panInside(hedef.isaretci.getLatLng(), {
+    map.panInside(isaretci.getLatLng(), {
         paddingTopLeft: [40, 80],
         paddingBottomRight: [40, yerKarti.offsetHeight + 30]
     });
+}
+
+// Telefonda alttan kayan kart, masaüstünde işaretin üstünde balon
+function kartGoster(icerik, isaretci) {
+    if (mobilEkran.matches) {
+        map.closePopup();
+        kartiAc(icerik, isaretci);
+    } else {
+        kartNo++;
+        L.popup({ minWidth: 210, offset: [0, -28], autoPanPaddingTopLeft: [50, 40] })
+            .setLatLng(isaretci.getLatLng())
+            .setContent(icerik)
+            .openOn(map);
+    }
 }
 
 suruklenebilirYap(yerKarti, '.kart-tutamac, strong, small', {
@@ -270,16 +292,31 @@ let gpsIcon = L.divIcon({
     iconAnchor: [22, 22]
 });
 
-function yonOkunuGuncelle() {
+let cizilenYon = null;      // ekrandaki okun açısı
+let okBekliyor = false;
+
+function yonOkunuCiz() {
+    okBekliyor = false;
     if (!konumIsaretcisi) return;
     let ok = konumIsaretcisi.getElement().querySelector('.gps-yon');
     let yon = pusulaYonu !== null ? pusulaYonu : hareketYonu;
     if (yon === null) {
         ok.style.display = "none";
+        cizilenYon = null;
         return;
     }
+    // 3 dereceden küçük titremeler için yeniden çizilmez
+    if (cizilenYon !== null && Math.abs(((yon - cizilenYon + 540) % 360) - 180) < 3) return;
+    cizilenYon = yon;
     ok.style.display = "block";
     ok.style.transform = `rotate(${yon}deg)`;
+}
+
+// Pusula saniyede onlarca veri gönderir; ok en fazla saniyede 8 kez güncellenir
+function yonOkunuGuncelle() {
+    if (okBekliyor) return;
+    okBekliyor = true;
+    setTimeout(yonOkunuCiz, 120);
 }
 
 function pusulaOku(e) {
@@ -386,15 +423,66 @@ function pinIkonu(hedef) {
     });
 }
 
+// Bu yakınlıktan itibaren her yer ayrı pin; daha uzakta yakın yerler tek dairede toplanır
+const AYRI_PIN_YAKINLIGI = 17;
+const KUME_MESAFESI = 48;     // ekranda birbirine bu kadar yakın pinler toplanır (px)
+let kumeKatmani = L.layerGroup().addTo(map);
+
 function pinleriGuncelle() {
+    let yakinlik = map.getZoom();
+    let gruplar = [];
+
     hedefler.forEach(h => {
-        if (!seciliKategori || h.kategoriler.includes(seciliKategori)) {
-            h.isaretci.setIcon(pinIkonu(h)).addTo(map);
-        } else {
+        if (seciliKategori && !h.kategoriler.includes(seciliKategori)) {
             map.removeLayer(h.isaretci);
+            return;
+        }
+        let konum = map.project(h.isaretci.getLatLng(), yakinlik);
+        let grup = yakinlik < AYRI_PIN_YAKINLIGI &&
+            gruplar.find(g => g.merkez.distanceTo(konum) < KUME_MESAFESI);
+        if (grup) grup.uyeler.push(h);
+        else gruplar.push({ merkez: konum, uyeler: [h] });
+    });
+
+    kumeKatmani.clearLayers();
+    gruplar.forEach(({ uyeler }) => {
+        if (uyeler.length === 1) {
+            pinGoster(uyeler[0]);
+        } else {
+            uyeler.forEach(h => map.removeLayer(h.isaretci));
+            kumeEkle(uyeler);
         }
     });
 }
+
+function pinGoster(hedef) {
+    // Simge yalnızca süzgeç değiştiyse yeniden oluşturulur
+    if (hedef.ikonKategori !== seciliKategori) {
+        hedef.isaretci.setIcon(pinIkonu(hedef));
+        hedef.ikonKategori = seciliKategori;
+    }
+    if (!map.hasLayer(hedef.isaretci)) hedef.isaretci.addTo(map);
+}
+
+// Birkaç yeri temsil eden sayılı daire; dokununca yakınlaşır
+function kumeEkle(uyeler) {
+    let sinirlar = L.latLngBounds(uyeler.map(h => h.isaretci.getLatLng()));
+    let renk = seciliKategori ? KATEGORILER[seciliKategori].renk : "#334155";
+    L.marker(sinirlar.getCenter(), {
+        icon: L.divIcon({
+            className: 'kume',
+            html: `<span style="background:${renk}">${uyeler.length}</span>`,
+            iconSize: [40, 40],
+            iconAnchor: [20, 20]
+        }),
+        title: `${uyeler.length} yer`
+    }).on('click', () => {
+        let hedefYakinlik = Math.max(map.getBoundsZoom(sinirlar.pad(0.4)), map.getZoom() + 1);
+        map.setView(sinirlar.getCenter(), Math.min(hedefYakinlik, 18));
+    }).addTo(kumeKatmani);
+}
+
+map.on('zoomend', pinleriGuncelle);
 
 function kategoriSec(kategori) {
     seciliKategori = kategori;
@@ -492,19 +580,7 @@ const hedeflerHazir = fetch('/static/data/kampus_hedefler.geojson')
 
             let hedef = { isim, koordinat, kategoriler, simge: SIMGELER[bilgi.simge] ? bilgi.simge : null };
             hedef.isaretci = L.marker([koordinat[1], koordinat[0]], { icon: pinIkonu(hedef), title: isim });
-            // Telefonda alttan kayan kart, masaüstünde pinin üstünde balon
-            hedef.isaretci.on('click', () => {
-                if (mobilEkran.matches) {
-                    map.closePopup();
-                    kartiAc(hedef);
-                } else {
-                    kartNo++;
-                    L.popup({ minWidth: 210, offset: [0, -28], autoPanPaddingTopLeft: [50, 40] })
-                        .setLatLng(hedef.isaretci.getLatLng())
-                        .setContent(bilgiKarti(hedef))
-                        .openOn(map);
-                }
-            });
+            hedef.isaretci.on('click', () => kartGoster(bilgiKarti(hedef), hedef.isaretci));
             hedefler.push(hedef);
         });
         pinleriGuncelle();
@@ -530,7 +606,13 @@ function bilgiKarti(hedef) {
         dugmeler.appendChild(dugme);
     });
 
-    kart.append(baslik, tur, dugmeler);
+    let paylas = document.createElement('button');
+    paylas.type = "button";
+    paylas.className = 'kart-paylas';
+    paylas.innerText = "🔗 Bu yeri paylaş";
+    paylas.addEventListener('click', () => yeriPaylas(hedef));
+
+    kart.append(baslik, tur, dugmeler, paylas);
     return kart;
 }
 
@@ -572,7 +654,7 @@ function karttanSec(hedef, hedefMi, dugme) {
             paneliKapat(false);
             vurgula(secilen);
         }
-    }, 700);
+    }, 400);
 }
 
 // --- Rota çizgisi ve A/B işaretleri ---
@@ -645,6 +727,7 @@ document.getElementById('temizle').addEventListener('click', () => {
     map.closePopup();
     kartiKapat();
     kategoriSec(null);
+    if (typeof ozelNoktayiSil === "function") ozelNoktayiSil();
     document.getElementById('durum').innerText = "Hedeflerinizi arayın veya seçin";
 });
 
@@ -662,6 +745,12 @@ function enYakinCift(baslangiclar, bitisler) {
         });
     });
     return enIyi;
+}
+
+function htmlKacis(metin) {
+    let kutu = document.createElement('div');
+    kutu.textContent = metin;
+    return kutu.innerHTML;
 }
 
 // paneliIndir: telefonda rota çizilince panel iner; not: sonucun başına eklenen açıklama
@@ -701,7 +790,9 @@ function rotaCiz({ paneliIndir = true, not = "" } = {}) {
             let mesafeMetre = Math.round(toplamMesafe);
             let sureDk = Math.ceil(mesafeMetre / 80);
             
-            document.getElementById('durum').innerHTML = `${not ? `${not}<br>${basIsim} → ` : "🎯 "}${bitIsim} <br> 📏 Mesafe: ${mesafeMetre} m <br> 🚶 Süre: ~${sureDk} dk`;
+            // İsimler kullanıcıdan gelebilir (işaretlenen noktalar): HTML'e kaçışlanarak yazılır
+            let ek = typeof ozelNotu === "function" ? ozelNotu(bitIsim) : "";
+            document.getElementById('durum').innerHTML = `${not ? `${not}<br>${htmlKacis(basIsim)} → ` : "🎯 "}${htmlKacis(bitIsim)} <br> 📏 Mesafe: ${mesafeMetre} m <br> 🚶 Süre: ~${sureDk} dk${ek ? `<br>${htmlKacis(ek)}` : ""}`;
             vurgula(durumKutusu);
             sonRota = { basIsim, bitIsim, basKoor, bitKoor };
             paylasDugmesi.hidden = false;

@@ -49,13 +49,10 @@ function qrCiz(metin) {
     return true;
 }
 
-function pencereyiGuncelle() {
-    let konumdan = konumdanSecimi.checked;
-    let link = paylasimLinki(sonRota, konumdan);
+// Link ve QR'ı pencereye yerleştirir (rota, tek yer veya işaretli nokta için ortak)
+function pencereyiDoldur(link, aciklama) {
     linkKutusu.value = link;
-
-    let baslangic = konumdan || sonRota.basIsim === "Mevcut Konumum" ? "Açanın konumu" : sonRota.basIsim;
-    document.getElementById('paylas-rota').innerText = `${baslangic} → ${sonRota.bitIsim}`;
+    document.getElementById('paylas-rota').innerText = aciklama;
 
     let qrVar = qrCiz(link);
     qrTuvali.hidden = !qrVar;
@@ -67,6 +64,30 @@ function pencereyiGuncelle() {
         : "";
 }
 
+function pencereyiGuncelle() {
+    let konumdan = konumdanSecimi.checked;
+    let baslangic = konumdan || sonRota.basIsim === "Mevcut Konumum" ? "Açanın konumu" : sonRota.basIsim;
+    pencereyiDoldur(paylasimLinki(sonRota, konumdan), `${baslangic} → ${sonRota.bitIsim}`);
+}
+
+// Rota dışındaki paylaşımlar: "başlangıç" seçeneği gösterilmez
+function paylasimPenceresiniAc({ baslik, aciklama, link }) {
+    document.getElementById('paylas-baslik').innerText = baslik;
+    konumdanSecimi.closest('label').hidden = true;
+    pencereyiDoldur(link, aciklama);
+    if (!pencere.open) pencere.showModal();
+}
+
+// Rota çizmeden tek bir yeri paylaşır: açan kişi kendi konumundan oraya gider
+function yeriPaylas(hedef) {
+    let rota = { basIsim: "Mevcut Konumum", bitIsim: hedef.isim, bitKoor: hedef.koordinat };
+    paylasimPenceresiniAc({
+        baslik: "Yeri paylaş",
+        aciklama: hedef.isim,
+        link: paylasimLinki(rota, true)
+    });
+}
+
 document.getElementById('paylas').addEventListener('click', () => {
     if (!sonRota) return;
     if (sonRota.bitIsim === "Mevcut Konumum") {
@@ -74,8 +95,16 @@ document.getElementById('paylas').addEventListener('click', () => {
         vurgula(durumKutusu);
         return;
     }
-    // Başlangıç zaten mevcut konumsa seçenek anlamsız
-    let konumdanBasliyor = sonRota.basIsim === "Mevcut Konumum";
+    // Hedef işaretlenmiş bir noktaysa o noktanın linki paylaşılır
+    if (ozelNokta && sonRota.bitIsim === ozelNokta.anahtar) {
+        noktayiPaylas();
+        return;
+    }
+    document.getElementById('paylas-baslik').innerText = "Rotayı paylaş";
+    konumdanSecimi.closest('label').hidden = false;
+    // Başlangıç zaten mevcut konumsa (veya işaretli noktaysa) seçenek anlamsız
+    let konumdanBasliyor = sonRota.basIsim === "Mevcut Konumum" ||
+        Boolean(ozelNokta && sonRota.basIsim === ozelNokta.anahtar);
     konumdanSecimi.checked = konumdanBasliyor;
     konumdanSecimi.disabled = konumdanBasliyor;
     pencereyiGuncelle();
