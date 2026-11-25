@@ -2,13 +2,7 @@
 
 Bu proje, Kütahya Dumlupınar Üniversitesi (DPÜ) kampüsü içindeki fiziksel konumları birer ağ düğümü (node) ve bağlantı yollarını veri iletim hattı olarak modelleyen Web tabanlı bir Coğrafi Bilgi Sistemi (WebGIS) uygulamasıdır.
 
-Projenin temel amacı; gerçek harita koordinatları üzerinden alınan fiziksel saha verilerini dijital bir ağ topolojisine dönüştürmek ve iki nokta arasındaki en uygun güzergâhı **Dijkstra Algoritması** kullanarak optimize etmektir.
-
----
-
-## 🎓 Proje Hakkında
-
-Bu proje, **Bursa Büyükşehir Belediyesi Trafik Şube Müdürlüğü**'nde tamamladığım donanım stajı sürecinde geliştirilmiştir. Staj boyunca Trafik Yönetim Merkezi (TYM) bünyesinde akıllı kavşakların merkezle haberleşme altyapısını, fiber optik hatları ve ağ cihazlarının çalışma prensiplerini sahada inceleme fırsatı buldum. Edindiğim bu teknik bilgiyi uygulamalı bir modellemeyle desteklemek amacıyla QGIS ile gerçek harita verileri üzerinde rota analizi gerçekleştirdim ve bu projeyi geliştirdim.
+Projenin temel amacı; gerçek harita koordinatları üzerinden alınan fiziksel saha verilerini dijital bir ağ topolojisine dönüştürmek ve iki nokta arasındaki en uygun güzergâhı **Dijkstra Algoritması** kullanarak optimize etmektir. Uygulama bunun üzerine kampüste yer bulmayı, yürüyüş rotası almayı ve konumları link veya QR kodla paylaşmayı sağlar.
 
 ---
 
@@ -18,7 +12,60 @@ Bu proje, **Bursa Büyükşehir Belediyesi Trafik Şube Müdürlüğü**'nde tam
 
 > ⏳ **Not:** Uygulama ücretsiz bir sunucuda barındırılıyor. Siteye birkaç dakika boyunca hiç girilmezse sunucu "uyku moduna" geçer. Bu durumda linke ilk tıkladığınızda sayfanın açılması **20-30 saniye** sürebilir (sunucu "uyanıyor"). Bu normal bir durumdur, sayfa yenilenmeden bekleyin. Sunucu uyandıktan sonra site normal hızda çalışır.
 
-![DPÜ Kampüs Rotalama Ekran Görüntüsü](screenshots/demo.png)
+### Masaüstü
+
+![DPÜ Kampüs Rotalama - masaüstü görünümü](screenshots/demo.png)
+
+### Telefon
+
+<img src="screenshots/mobil.png" alt="DPÜ Kampüs Rotalama - telefon görünümü" width="320">
+
+---
+
+## ✨ Özellikler
+
+### Yer bulma
+- Kampüste **39 nokta**, altı kategoride: Fakülte, Yemek, Yurt, Spor, Hizmet, Gezi
+- Yer türüne göre simgeli pinler ve **kategori süzgeci**
+- Birbirine yakın yerler uzaktan bakınca **sayılı dairelerde** toplanır
+- **Türkçe karakterlere duyarlı arama** ("iibf" yazınca "İİBF" bulunur)
+- Yemek ve Spor için **"En yakın yere git"** düğmesi (yürüyüş mesafesine göre)
+- Her yer için bilgi kartı: *Buradan başla*, *Buraya git*, *Bu yeri paylaş*
+
+### Rota
+- Dijkstra ile en kısa yürüyüş güzergâhı, mesafe ve tahmini süre
+- Başlangıç (A) ve bitiş (B) işaretleri
+- Tek dokunuşla başlangıç ve bitişi değiştirme veya temizleme
+- Canlı konum ("Mevcut Konumum") ve telefonun baktığı yönü gösteren **yön oku**
+- Kampüs yol ağından uzak konumlar için uyarı
+
+### Paylaşım
+- **Rota paylaşımı:** link veya QR kod; istenirse başlangıç, linki açanın konumu olur
+- **Nokta işaretleme:** haritaya basılı tutup (masaüstünde sağ tık) etkinlik veya buluşma noktası oluşturma, isteğe bağlı tarih ve saat
+- **Buradayım:** onay verdikten sonra anlık konumu paylaşma
+- Tarihi geçen etkinlik linkinde "Bu etkinlik sona erdi" uyarısı
+- QR kodu resim olarak indirme (afiş ve tabelalar için)
+
+### Telefon deneyimi
+- Parmakla sürüklenen alt panel ve alttan kayan yer kartı
+- Yazarken yukarı taşınan arama kutusu
+
+---
+
+## 💡 Kullanım
+
+### Rota almak
+1. **Nereden** ve **Nereye** kutularından yer seçin, ya da haritadaki bir pine dokunup *Buradan başla* / *Buraya git* deyin.
+2. Rota, mesafe ve süre ekranda görünür.
+3. Göndermek isterseniz **Rotayı paylaş** düğmesine basın.
+
+### Etkinlik noktası paylaşmak
+1. Haritada etkinliğin yapılacağı yere **basılı tutun** (veya *Nokta işaretle* düğmesine basıp dokunun).
+2. Ad yazın; isterseniz tarih ve saat ekleyin.
+3. Oluşan **linki gönderin** veya **QR kodu** afişe koyun.
+4. Linki açan kişi noktayı görür; konum izni verirse oradan yürüyüş rotası çizilir.
+
+> 🔒 **Gizlilik:** İşaretlenen noktalar sunucuya kaydedilmez, bilgiler linkin içinde taşınır ve yalnızca linki alanlar görür. Rota linklerine kişinin konumu yazılmaz. Konum yalnızca *Buradayım* özelliğinde, onaydan sonra linke eklenir; bu canlı takip değildir.
 
 ---
 
@@ -30,6 +77,7 @@ Bu sistem, donanım haberleşmesi ve ağ mantığının yazılım dünyasındaki
 - **Graf ve Rota Hesaplama:** NetworkX (Dijkstra Algoritması)
 - **Coğrafi Veri İşleme:** GeoPandas
 - **Frontend ve Harita Arayüzü:** HTML/CSS/JS, Leaflet.js
+- **QR Kod:** qrcode-generator
 - **Coğrafi Veri Kaynağı (CBS):** QGIS, JOSM, GeoJSON
 - **Barındırma (Hosting):** Render.com
 
@@ -39,10 +87,10 @@ Bu sistem, donanım haberleşmesi ve ağ mantığının yazılım dünyasındaki
 
 Proje, sadece bir harita üzerinde çizgi çekmekten ziyade, donanımsal bir ağ mimarisinin yazılımla modellenmesi prensibine dayanır:
 
-1. **Veri Toplama ve Düğüm (Node) Modellemesi:** Kampüs içerisindeki yollar ve önemli konumlar QGIS ve JOSM gibi CBS araçları kullanılarak vektörel verilere dönüştürülmüştür. Her bir lokasyon sistemde bir "düğüm", aralarındaki yollar ise fiziksel bir bağlantı (edge) olarak tanımlanmıştır.
+1. **Veri Toplama ve Düğüm (Node) Modellemesi:** Kampüs içerisindeki yollar ve önemli konumlar QGIS ve JOSM gibi CBS araçları kullanılarak vektörel verilere dönüştürülmüştür. Yolların kırılma ve kesişim noktaları sistemde "düğüm", aralarındaki parçalar ise fiziksel bir bağlantı (edge) olarak tanımlanmıştır.
 2. **Arka Plan (Backend) Haberleşmesi:** Flask tabanlı sunucu, haritadan (istemciden) gelen başlangıç ve bitiş koordinatlarını REST mimarisiyle alır.
-3. **Rota Optimizasyonu:** Sunucu tarafında çalışan NetworkX kütüphanesi, gelen konum verilerini graf modellemesi üzerinde işler. Düğümler arası en kısa mesafe Dijkstra algoritması ile hesaplanır.
-4. **Görselleştirme:** Hesaplanan en uygun rota, JSON formatında tekrar Leaflet.js arayüzüne iletilir ve kullanıcıya harita üzerinde kesintisiz bir çizgi (güzergâh) olarak gösterilir.
+3. **Rota Optimizasyonu:** Sunucu, koordinatları en yakın yol düğümlerine bağlar. Düğümler arası en kısa güzergâh NetworkX ile Dijkstra algoritması kullanılarak hesaplanır.
+4. **Görselleştirme:** Hesaplanan rota JSON formatında Leaflet.js arayüzüne iletilir ve harita üzerinde çizilir.
 
 ---
 
@@ -50,23 +98,50 @@ Proje, sadece bir harita üzerinde çizgi çekmekten ziyade, donanımsal bir ağ
 
 ```
 dpu_rotalama/
-├── static/
-│   ├── data/
-│   │   └── kampus_yollar.geojson   # Kampüs yol ağı verisi
-│   └── ...                          # CSS, JS ve diğer statik dosyalar
+├── main.py                        # Flask sunucusu ve rota hesaplama API'si
+├── requirements.txt               # Python bağımlılıkları
 ├── templates/
-│   └── index.html                   # Leaflet.js harita arayüzü
-├── requirements.txt                  # Python bağımlılıkları
-└── main.py                          # Flask sunucusu ve rota hesaplama API'si
+│   └── index.html                 # Arayüz iskeleti
+├── static/
+│   ├── app.js                     # Harita, arama, rota, panel ve konum
+│   ├── paylas.js                  # Link, QR kod ve linkten açma
+│   ├── nokta.js                   # Nokta işaretleme ve "Buradayım"
+│   ├── style.css                  # Masaüstü ve telefon tasarımı
+│   └── data/
+│       ├── kampus_yollar.geojson      # Yol ağı
+│       ├── kampus_binalar.geojson     # Bina çizimleri
+│       └── kampus_hedefler.geojson    # Yerler ve kategorileri
+└── screenshots/                   # README görselleri
 ```
+
+### Yeni yer eklemek
+
+`kampus_hedefler.geojson` dosyasına yeni bir kayıt ekleyin. Koordinat sırası **boylam, enlem** şeklindedir.
+
+```json
+{"type":"Feature","properties":{"name":"Yer Adı","kategori":"hizmet"},"geometry":{"type":"Point","coordinates":[29.8970,39.4800]}}
+```
+
+| Alan | Açıklama |
+|------|----------|
+| `kategori` | `fakulte`, `yemek`, `yurt`, `spor`, `hizmet`, `gezi` |
+| `ek_kategori` | İsteğe bağlı ikinci kategori |
+| `simge` | İsteğe bağlı özel simge: `hastane`, `cami`, `kitap`, `otobus` |
 
 ---
 
-## 💡 Kullanım
+## 🔗 Link Parametreleri
 
-1. Harita üzerinde bir **başlangıç noktası** seçin.
-2. Ardından bir **bitiş noktası** seçin.
-3. Sistem, `/api/rota` uç noktası üzerinden Dijkstra algoritmasıyla en kısa güzergâhı hesaplar ve harita üzerinde çizer.
+| Parametre | Anlamı |
+|-----------|--------|
+| `nereden`, `nereye` | Başlangıç ve hedef yerin adı. Yalnızca `nereye` verilirse rota açanın konumundan başlar |
+| `a`, `b` | Aynı isimli yerlerde hangisi olduğu (`boylam,enlem`) |
+| `nokta` | İşaretlenen noktanın koordinatı (`boylam,enlem`) |
+| `ad` | İşaretlenen noktanın adı (en fazla 60 karakter) |
+| `tarih`, `saat`, `bitis` | Etkinlik zamanı (`YYYY-AA-GG`, `SS:DD`) |
+| `tur=konum` | "Buradayım" paylaşımı |
+
+Örnek: `https://dpu-rotam.onrender.com/?nereden=Kütüphane&nereye=İİBF`
 
 ---
 
@@ -107,12 +182,13 @@ dpu_rotalama/
 
 ## 🛠️ Yerel Ortamda Çalıştırma (Opsiyonel)
 
-> Uygulama artık yukarıdaki canlı linkte çalışıyor, aşağıdaki adımlar sadece kendi bilgisayarınızda geliştirme yapmak isteyenler içindir.
+> Uygulama yukarıdaki canlı linkte çalışıyor, aşağıdaki adımlar sadece kendi bilgisayarınızda geliştirme yapmak isteyenler içindir.
 
 ### 1. Gereksinimler
 
-- Python 3.8 veya üzeri
+- Python 3.10 veya üzeri
 - pip
+- İnternet bağlantısı (harita parçaları, Leaflet ve QR kütüphanesi için)
 
 ### 2. Repoyu Klonlayın
 
@@ -145,7 +221,7 @@ source venv/bin/activate
 pip install -r requirements.txt
 ```
 
-> 💡 `geopandas` kurulumu bazı sistemlerde ek bağımlılıklar (GDAL, Fiona vb.) gerektirebilir. Kurulumda sorun yaşarsanız `conda install geopandas` kullanmanız önerilir.
+> 💡 `geopandas` kurulumu bazı sistemlerde ek bağımlılıklar gerektirebilir. Kurulumda sorun yaşarsanız `conda install geopandas` kullanmanız önerilir.
 
 ### 5. Uygulamayı Başlatın
 
@@ -161,15 +237,39 @@ Sunucu başarıyla başladığında terminalde aşağıdaki gibi bir çıktı g�
 
 ### 6. Uygulamaya Erişin
 
-Tarayıcınızdan aşağıdaki adrese giderek harita arayüzünü açabilirsiniz:
-
 ```
 http://127.0.0.1:5000
 ```
+
+> 📱 Telefon görünümünü bilgisayarda denemek için tarayıcıda `F12` ve ardından `Ctrl+Shift+M` kullanabilirsiniz. Konum ve pusula yalnızca HTTPS üzerinde veya `localhost` adresinde çalışır.
+
 ---
-📄© Telif Hakkı
+
+## 🧭 Bilinen Sınırlar ve Yol Haritası
+
+**Bilinen sınırlar**
+- Rota, hedefe en yakın yol düğümünde biter; bazı binalarda kapıya kadar ulaşmaz.
+- Yürüyüş süresi dakikada 80 metre varsayımıyla hesaplanır.
+- Basılan QR kodlardaki bilgi sonradan değiştirilemez.
+
+**Planlananlar**
+- [ ] Rotanın bina girişine kadar tamamlanması
+- [ ] Engelsiz rota (kampüste saha çalışması gerektirir)
+- [ ] Yer ekleme ve yol kapatma için yönetim ekranı
+- [ ] Güncellenebilen ve haritada listelenen etkinlikler
+
+---
+
+## 🎓 Proje Hakkında
+
+Bu proje, **Bursa Büyükşehir Belediyesi Trafik Şube Müdürlüğü**'nde tamamladığım donanım stajı sürecinde geliştirilmiştir. Staj boyunca Trafik Yönetim Merkezi (TYM) bünyesinde akıllı kavşakların merkezle haberleşme altyapısını, fiber optik hatları ve ağ cihazlarının çalışma prensiplerini sahada inceleme fırsatı buldum. Edindiğim bu teknik bilgiyi uygulamalı bir modellemeyle desteklemek amacıyla QGIS ile gerçek harita verileri üzerinde rota analizi gerçekleştirdim ve bu projeyi geliştirdim.
+
+---
+
+## 📄 Telif Hakkı
 
 Tüm hakları saklıdır.
 
 Bu proje ve kaynak kodları @anilaglarin tarafından geliştirilmiştir. Açık bir lisans belirtilmediği sürece, kodun kopyalanması, dağıtılması veya ticari/kişisel projelerde izinsiz kullanılması yasaktır. Kullanım izni için lütfen iletişime geçin.
----
+
+Harita verisi © [OpenStreetMap](https://www.openstreetmap.org/copyright) katkıcıları.
