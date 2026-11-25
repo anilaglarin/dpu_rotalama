@@ -43,7 +43,10 @@ let yerKarti = document.getElementById('yer-karti');
 // Panel kapanınca ne kadar aşağı kayacak: yalnızca tutamaç ve sonuç görünür kalır
 function kaymayiHesapla() {
     if (!mobilEkran.matches || panel.classList.contains('yaziyor')) return;
-    let gorunen = durumKutusu.offsetTop + durumKutusu.offsetHeight + 12;
+    // Rota varsa "Paylaş" düğmesi de görünür kalır
+    let paylas = document.getElementById('paylas');
+    let sonOge = paylas.hidden ? durumKutusu : paylas;
+    let gorunen = sonOge.offsetTop + sonOge.offsetHeight + 12;
     panel.style.setProperty('--kayma', Math.max(0, panel.offsetHeight - gorunen) + 'px');
 }
 
@@ -470,7 +473,8 @@ async function enYakinaGit() {
 
 enYakinDugmesi.addEventListener('click', enYakinaGit);
 
-fetch('/static/data/kampus_hedefler.geojson')
+// paylas.js, linkteki rotayı yerler yüklendikten sonra açmak için bunu bekler
+const hedeflerHazir = fetch('/static/data/kampus_hedefler.geojson')
     .then(cevap => cevap.json())
     .then(veri => {
         veri.features.forEach(feature => {
@@ -574,9 +578,15 @@ function karttanSec(hedef, hedefMi, dugme) {
 // --- Rota çizgisi ve A/B işaretleri ---
 let ucIsaretleri = L.layerGroup().addTo(map);
 
+let sonRota = null;   // ekrandaki rota: paylaşım için
+let paylasDugmesi = document.getElementById('paylas');
+boyutIzleyici.observe(paylasDugmesi);
+
 function rotayiSil() {
     if (rotaKatmani) map.removeLayer(rotaKatmani);
     rotaKatmani = null;
+    sonRota = null;
+    paylasDugmesi.hidden = true;
     ucIsaretleri.clearLayers();
 }
 
@@ -693,6 +703,8 @@ function rotaCiz({ paneliIndir = true, not = "" } = {}) {
             
             document.getElementById('durum').innerHTML = `${not ? `${not}<br>${basIsim} → ` : "🎯 "}${bitIsim} <br> 📏 Mesafe: ${mesafeMetre} m <br> 🚶 Süre: ~${sureDk} dk`;
             vurgula(durumKutusu);
+            sonRota = { basIsim, bitIsim, basKoor, bitKoor };
+            paylasDugmesi.hidden = false;
 
             // Mevcut konum zaten mavi noktayla gösterildiği için A konmaz
             if (basIsim !== "Mevcut Konumum") ucIsareti(basKoor, "A");

@@ -334,6 +334,97 @@ button:hover {
     font-weight: bold; 
 }
 
+/* Paylaşım düğmesi ve penceresi */
+#paylas {
+    margin-top: 8px;
+    background: #0f766e;
+}
+
+#paylas[hidden],
+#paylas-penceresi [hidden] {
+    display: none;
+}
+
+#paylas-penceresi {
+    width: min(340px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    box-sizing: border-box;
+    padding: 18px;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    text-align: center;
+}
+
+#paylas-penceresi[open] {
+    animation: yukari-gel 0.3s ease-out;
+}
+
+#paylas-penceresi::backdrop {
+    background: rgba(15, 23, 42, 0.55);
+}
+
+#paylas-penceresi h4 {
+    margin: 0;
+    font-size: 18px;
+    color: #0f172a;
+}
+
+#paylas-rota {
+    margin: 6px 0 10px;
+    font-size: 13px;
+    color: #475569;
+}
+
+#paylas-qr {
+    display: block;
+    width: min(200px, 60vw);
+    height: auto;
+    margin: 0 auto 10px;
+    image-rendering: pixelated;
+}
+
+#paylas-penceresi .secenek {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 13px;
+}
+
+#paylas-link {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #475569;
+}
+
+#paylas-bilgi {
+    min-height: 1em;
+    margin: 8px 0;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #0f766e;
+}
+
+#paylas-penceresi button {
+    margin-top: 6px;
+}
+
+#paylas-indir {
+    background: #0f766e;
+}
+
+#paylas-kapat,
+#paylas-kapat:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
 /* Panel tutamacı ve alttan kayan kart yalnızca telefonda görünür */
 #panel-tutamac,
 #yer-karti {
@@ -575,6 +666,11 @@ button:hover {
         order: -1;
         margin: 0 0 10px;
         touch-action: none;
+    }
+
+    #paylas {
+        order: -1;
+        margin: 0 0 10px;
     }
 
     /* Yazma modu: panel üste çıkar, klavye listeyi kapatmaz */

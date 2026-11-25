@@ -37,6 +37,7 @@
             <button type="button" id="temizle" class="ikincil" title="Temizle" aria-label="Temizle">✕</button>
         </div>
         <p id="durum">Hedeflerinizi arayın veya seçin</p>
+        <button type="button" id="paylas" hidden>🔗 Rotayı paylaş</button>
         <p id="gps-uyari"></p>
     </div>
 
@@ -44,6 +45,24 @@
 
     <div id="harita"></div>
 
+    <dialog id="paylas-penceresi" aria-labelledby="paylas-baslik">
+        <h4 id="paylas-baslik">Rotayı paylaş</h4>
+        <p id="paylas-rota"></p>
+        <canvas id="paylas-qr" aria-label="Rota için QR kod"></canvas>
+        <label class="secenek">
+            <input type="checkbox" id="paylas-konumdan">
+            Başlangıç, linki açanın konumu olsun
+        </label>
+        <input type="text" id="paylas-link" readonly aria-label="Rota linki">
+        <p id="paylas-bilgi" aria-live="polite"></p>
+        <button type="button" id="paylas-kopyala">Linki kopyala</button>
+        <button type="button" id="paylas-menu" hidden>Gönder (WhatsApp vb.)</button>
+        <button type="button" id="paylas-indir">QR'ı indir</button>
+        <button type="button" id="paylas-kapat">Kapat</button>
+    </dialog>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js"></script>
     <script src="{{ url_for('static', filename='app.js') }}"></script>
+    <script src="{{ url_for('static', filename='paylas.js') }}"></script>
 </body>
 </html>
