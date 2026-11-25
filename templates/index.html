@@ -11,7 +11,13 @@
 <body>
     <div id="kontrol-paneli">
         <button type="button" id="panel-tutamac" aria-label="Paneli aç veya kapat" aria-expanded="true"></button>
-        <h3>📍 DPÜ Kampüs Rotalama</h3>
+        <header>
+            <h3>📍 DPÜ Kampüs Rotalama</h3>
+            <p>Evliya Çelebi Yerleşkesi · Yaya yol tarifi</p>
+        </header>
+
+        <div id="kategoriler" role="group" aria-label="Yer türüne göre süz"></div>
+        <button type="button" id="en-yakin" hidden></button>
 
         <div class="girdi-grubu arama-kutusu">
             <label>Nereden:</label>
@@ -25,10 +31,16 @@
             <div id="bitis-liste" class="acilir-liste"></div>
         </div>
         
-        <button onclick="rotaCiz()">Rotayı Bul</button>
+        <div id="eylemler">
+            <button type="button" id="yer-degistir" class="ikincil" title="Başlangıç ve bitişi değiştir" aria-label="Başlangıç ve bitişi değiştir">⇅</button>
+            <button type="button" onclick="rotaCiz()">Rotayı Bul</button>
+            <button type="button" id="temizle" class="ikincil" title="Temizle" aria-label="Temizle">✕</button>
+        </div>
         <p id="durum">Hedeflerinizi arayın veya seçin</p>
         <p id="gps-uyari"></p>
     </div>
+
+    <div id="yer-karti" aria-live="polite"></div>
 
     <div id="harita"></div>
 
