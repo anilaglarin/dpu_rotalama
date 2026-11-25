@@ -78,19 +78,30 @@ dpu_rotalama/
 
 ```
 {
-  "baslangic": [enlem, boylam],
-  "bitis": [enlem, boylam]
+  "baslangic": [boylam, enlem],
+  "bitis": [boylam, enlem]
 }
 ```
+
+> Sıra GeoJSON ile aynıdır: önce **boylam**, sonra **enlem** (örnek: `[29.891, 39.482]`).
 
 **Başarılı yanıt:**
 
 ```
 {
   "durum": "basarili",
-  "koordinatlar": [[x1, y1], [x2, y2], "..."]
+  "koordinatlar": [[boylam1, enlem1], [boylam2, enlem2], "..."]
 }
 ```
+
+**Hata yanıtı:** `{ "durum": "hata", "mesaj": "..." }`
+
+| Kod | Anlamı |
+|-----|--------|
+| 400 | Eksik veya geçersiz veri |
+| 404 | İki nokta arasında yol bulunamadı |
+| 422 | Nokta, kampüs yol ağına 150 metreden uzak |
+| 500 | Beklenmeyen sunucu hatası |
 
 ---
 
