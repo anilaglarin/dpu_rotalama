@@ -128,12 +128,173 @@ button:hover {
 }
 
 /* Hedef Noktaları (Kırmızı Pin) Tasarımı */
-.hedef-pin {
+/* Döndürme iç öğede: Leaflet dış öğenin transform değerini kendisi kullanır */
+.hedef-pin-sekil {
+    position: absolute;
+    top: 5px;
+    left: 5px;
+    width: 26px;
+    height: 26px;
+    box-sizing: border-box;
     background-color: #e74c3c;
     border-radius: 50% 50% 50% 0;
     border: 2px solid white;
     transform: rotate(-45deg);
     box-shadow: -2px 2px 4px rgba(0,0,0,0.3);
+}
+
+/* Pin içindeki simge, pinin dönüşünü geri alarak düz durur */
+.hedef-pin-sekil span {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100%;
+    color: white;
+    transform: rotate(45deg);
+}
+
+.hedef-pin-sekil svg {
+    width: 16px;
+    height: 16px;
+}
+
+/* Rotanın başlangıç (A) ve bitiş (B) işaretleri */
+.uc-isareti {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    border: 3px solid white;
+    border-radius: 50%;
+    color: white;
+    font-size: 12px;
+    font-weight: bold;
+    box-shadow: 0 1px 5px rgba(0,0,0,0.45);
+}
+
+.uc-A { background: #15803d; }
+.uc-B { background: #dc2626; }
+
+/* Yer bilgi kartı */
+.bilgi-karti strong {
+    display: block;
+    font-size: 14px;
+    color: #0f172a;
+}
+
+.bilgi-karti small {
+    display: block;
+    margin: 2px 0 10px;
+    color: #64748b;
+}
+
+.bilgi-karti div {
+    display: flex;
+    gap: 6px;
+}
+
+.bilgi-karti button {
+    padding: 8px 6px;
+    font-size: 12px;
+    border: 1.5px solid #2563eb;
+    background: white;
+    color: #2563eb;
+}
+
+.bilgi-karti button.ana {
+    background: #2563eb;
+    color: white;
+}
+
+.bilgi-karti button:hover {
+    filter: brightness(0.94);
+}
+
+/* Panel görünümü */
+#kontrol-paneli header {
+    margin-bottom: 12px;
+    border-bottom: 2px solid #2563eb;
+    padding-bottom: 8px;
+}
+
+#kontrol-paneli header h3 {
+    margin: 0;
+    border: none;
+    padding: 0;
+}
+
+#kontrol-paneli header p {
+    margin: 3px 0 0;
+    font-size: 12px;
+    color: #64748b;
+}
+
+#kontrol-paneli .girdi-grubu input:focus {
+    outline: none;
+    border-color: #2563eb;
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.18);
+}
+
+#eylemler {
+    display: flex;
+    gap: 6px;
+}
+
+#eylemler button.ikincil {
+    flex: 0 0 46px;
+    background: #e2e8f0;
+    color: #0f172a;
+    font-size: 17px;
+}
+
+#kontrol-paneli #durum {
+    padding: 9px 10px;
+    border-radius: 8px;
+    background: #f1f5f9;
+    color: #0f172a;
+    line-height: 1.5;
+}
+
+/* Kategori süzme düğmeleri */
+#kategoriler {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 12px;
+}
+
+#kategoriler svg {
+    width: 14px;
+    height: 14px;
+}
+
+#kategoriler button {
+    --renk: #475569;
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+    width: auto;
+    padding: 5px 10px;
+    border: 1.5px solid var(--renk);
+    border-radius: 999px;
+    background: white;
+    color: var(--renk);
+    font-size: 12px;
+}
+
+#kategoriler button.secili {
+    background: var(--renk);
+    color: white;
+}
+
+#en-yakin {
+    margin-bottom: 12px;
+    background: #0f172a;
+}
+
+#en-yakin[hidden] {
+    display: none;
 }
 
 .arama-kutusu { 
@@ -173,18 +334,370 @@ button:hover {
     font-weight: bold; 
 }
 
+/* Paylaşım düğmesi ve penceresi */
+#paylas {
+    margin-top: 8px;
+    background: #0f766e;
+}
+
+#paylas[hidden],
+#paylas-penceresi [hidden] {
+    display: none;
+}
+
+#paylas-penceresi {
+    width: min(340px, calc(100vw - 32px));
+    max-height: calc(100dvh - 32px);
+    box-sizing: border-box;
+    padding: 18px;
+    border: none;
+    border-radius: 16px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.3);
+    text-align: center;
+}
+
+#paylas-penceresi[open] {
+    animation: yukari-gel 0.3s ease-out;
+}
+
+#paylas-penceresi::backdrop {
+    background: rgba(15, 23, 42, 0.55);
+}
+
+#paylas-penceresi h4 {
+    margin: 0;
+    font-size: 18px;
+    color: #0f172a;
+}
+
+#paylas-rota {
+    margin: 6px 0 10px;
+    font-size: 13px;
+    color: #475569;
+}
+
+#paylas-qr {
+    display: block;
+    width: min(200px, 60vw);
+    height: auto;
+    margin: 0 auto 10px;
+    image-rendering: pixelated;
+}
+
+#paylas-penceresi .secenek {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    margin-bottom: 10px;
+    font-size: 13px;
+}
+
+#paylas-link {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #475569;
+}
+
+#paylas-bilgi {
+    min-height: 1em;
+    margin: 8px 0;
+    border-radius: 6px;
+    font-size: 12px;
+    color: #0f766e;
+}
+
+#paylas-penceresi button {
+    margin-top: 6px;
+}
+
+#paylas-indir {
+    background: #0f766e;
+}
+
+#paylas-kapat,
+#paylas-kapat:hover {
+    background: #e2e8f0;
+    color: #0f172a;
+}
+
+/* Panel tutamacı ve alttan kayan kart yalnızca telefonda görünür */
+#panel-tutamac,
+#yer-karti {
+    display: none;
+}
+
+/* Masaüstünde bilgi balonu yumuşak açılır */
+.leaflet-popup-content .bilgi-karti {
+    animation: yukari-gel 0.3s ease-out;
+}
+
+@keyframes yukari-gel {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: none; }
+}
+
+.bilgi-karti button.onay,
+.bilgi-karti button.onay:hover {
+    background: #15803d;
+    border-color: #15803d;
+    color: white;
+}
+
+.bilgi-karti button:disabled:not(.onay) {
+    opacity: 0.4;
+}
+
+/* Değişen alanı belli eden kısa parlama */
+.vurgu {
+    animation: parla 1.3s ease-out;
+}
+
+@keyframes parla {
+    0%, 35% { background-color: #fde68a; box-shadow: 0 0 0 4px rgba(245, 158, 11, 0.45); }
+    100%    { box-shadow: 0 0 0 4px rgba(245, 158, 11, 0); }
+}
+
 /* Mobil Uyumluluk (Responsive Tasarım) */
 @media (max-width: 768px) {
+    body {
+        overflow: hidden;
+    }
+
+    #harita {
+        width: 100%;
+        height: 100vh;
+        height: 100dvh;   /* tarayıcı çubuğu hesaba katılır */
+    }
+
     #kontrol-paneli {
         position: absolute;
         bottom: 0;
         left: 0;
         top: auto;
         width: 100%;
-        border-radius: 20px 20px 0 0;
+        padding: 0 16px 14px;
+        border-radius: 18px 18px 0 0;
         box-shadow: 0 -4px 10px rgba(0,0,0,0.15);
-        max-height: 40vh;
+        max-height: 55vh;
         overflow-y: auto;
+        overscroll-behavior: contain;
         box-sizing: border-box;
+        display: flex;
+        flex-direction: column;
+        transform: translateY(0);
+        transition: transform 0.4s cubic-bezier(.22, 1, .36, 1);
+    }
+
+    #kontrol-paneli > * {
+        flex-shrink: 0;
+    }
+
+    #kontrol-paneli.kapali {
+        overflow: hidden;
+        transform: translateY(var(--kayma, 0px));
+    }
+
+    /* Yer kartı açıkken panel ekranın altına çekilir */
+    #kontrol-paneli.kart-acik {
+        transform: translateY(105%);
+    }
+
+    /* Parmakla sürüklerken gecikme olmasın */
+    #kontrol-paneli.suruklenen,
+    #yer-karti.suruklenen {
+        transition: none;
+    }
+
+    #panel-tutamac {
+        display: block;
+        order: -2;
+        height: 30px;
+        padding: 0;
+        background: transparent;
+        touch-action: none;
+    }
+
+    #yer-karti {
+        display: block;
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        z-index: 1050;
+        width: 100%;
+        box-sizing: border-box;
+        padding: 0 16px 20px;
+        border-radius: 18px 18px 0 0;
+        background: white;
+        box-shadow: 0 -4px 16px rgba(0,0,0,0.2);
+        visibility: hidden;
+        transform: translateY(105%);
+        transition: transform 0.4s cubic-bezier(.22, 1, .36, 1), visibility 0.4s;
+    }
+
+    #yer-karti.acik {
+        visibility: visible;
+        transform: translateY(0);
+    }
+
+    .kart-tutamac {
+        height: 30px;
+        touch-action: none;
+    }
+
+    .kart-tutamac::before {
+        content: "";
+        display: block;
+        width: 44px;
+        height: 5px;
+        margin: 0 auto;
+        position: relative;
+        top: 11px;
+        border-radius: 3px;
+        background: #bdc3c7;
+    }
+
+    #yer-karti .kart-kapat {
+        position: absolute;
+        top: 14px;
+        right: 12px;
+        width: 36px;
+        height: 36px;
+        padding: 0;
+        border-radius: 50%;
+        background: #f1f5f9;
+        color: #475569;
+    }
+
+    #yer-karti strong {
+        font-size: 18px;
+        padding-right: 44px;
+        touch-action: none;
+    }
+
+    #yer-karti small {
+        font-size: 14px;
+        margin-bottom: 16px;
+        touch-action: none;
+    }
+
+    #yer-karti .bilgi-karti button {
+        padding: 13px 8px;
+        font-size: 15px;
+    }
+
+    .hedef-pin-sekil {
+        transition: transform 0.25s;
+    }
+
+    .secili-pin .hedef-pin-sekil {
+        transform: rotate(-45deg) scale(1.45);
+    }
+
+    #panel-tutamac:hover {
+        background: transparent;
+    }
+
+    #panel-tutamac::before {
+        content: "";
+        display: block;
+        width: 44px;
+        height: 5px;
+        margin: 0 auto;
+        border-radius: 3px;
+        background: #bdc3c7;
+    }
+
+    #kontrol-paneli h3 {
+        font-size: 16px;
+        margin-bottom: 10px;
+    }
+
+    .girdi-grubu {
+        margin-bottom: 8px;
+    }
+
+    .hedef-pin-sekil {
+        top: 9px;
+        left: 7px;
+        width: 22px;
+        height: 22px;
+    }
+
+    .hedef-pin-sekil svg {
+        width: 13px;
+        height: 13px;
+    }
+
+    /* Telefonda panel yer kaplamasın diye başlık gizlenir */
+    #kontrol-paneli header {
+        display: none;
+    }
+
+    /* Düğmeler tek satırda, yana kaydırılır */
+    #kategoriler {
+        flex-wrap: nowrap;
+        overflow-x: auto;
+        margin-bottom: 8px;
+        scrollbar-width: none;
+    }
+
+    #kategoriler button {
+        flex: 0 0 auto;
+        padding: 7px 12px;
+        font-size: 13px;
+    }
+
+    #en-yakin {
+        margin-bottom: 8px;
+    }
+
+    /* 16px altı yazıda iPhone sayfayı kendiliğinden yakınlaştırır */
+    .girdi-grubu input {
+        font-size: 16px;
+    }
+
+    /* Sonuç satırı en üstte durur: panel inikken de görünür */
+    #kontrol-paneli #durum {
+        order: -1;
+        margin: 0 0 10px;
+        touch-action: none;
+    }
+
+    #paylas {
+        order: -1;
+        margin: 0 0 10px;
+    }
+
+    /* Yazma modu: panel üste çıkar, klavye listeyi kapatmaz */
+    #kontrol-paneli.yaziyor {
+        top: 0;
+        bottom: auto;
+        z-index: 1100;
+        max-height: none;
+        padding-top: 12px;
+        border-radius: 0 0 18px 18px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        transform: none;
+        transition: none;
+    }
+
+    #kontrol-paneli.yaziyor > :not(.aktif) {
+        display: none;
+    }
+
+    #kontrol-paneli.yaziyor .acilir-liste {
+        position: static;
+        max-height: 40vh;
+        max-height: 40dvh;
+    }
+
+    .acilir-liste div {
+        padding: 13px 10px;
+        font-size: 15px;
     }
 }
