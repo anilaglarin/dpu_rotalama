@@ -17,10 +17,23 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     keepBuffer: 4            // ekran dışındaki parçalar hazırda tutulsun
 }).addTo(map);
 
+// Rotanın dış kenarı koyu temada kısılır
+function rotaKenarRengi() {
+    return document.documentElement.classList.contains('koyu') ? "#8f98aa" : "#ffffff";
+}
+
+// Binalar da temaya göre boyanır
+let binaKatmani = null;
+function binaStili() {
+    let koyu = document.documentElement.classList.contains('koyu');
+    return { color: koyu ? "#3b352f" : "#8d8176", weight: 1.5,
+             fillColor: koyu ? "#5a534b" : "#c4b9ad", fillOpacity: 0.75 };
+}
+
 fetch('/static/data/kampus_binalar.geojson')
     .then(cevap => cevap.json())
     .then(veri => {
-        L.geoJSON(veri, { style: { color: "#2c3e50", weight: 2, fillOpacity: 0.4 } }).addTo(map);
+        binaKatmani = L.geoJSON(veri, { style: binaStili() }).addTo(map);
     });
 
 let rotaKatmani = null;
@@ -40,10 +53,24 @@ const mobilEkran = window.matchMedia('(max-width: 768px)');
 let panel = document.getElementById('kontrol-paneli');
 let tutamac = document.getElementById('panel-tutamac');
 
-// Alttaki panel harita kaynak yazısını kapatmasın;
-// masaüstünde yakınlaştırma düğmeleri panelin üstüne binmesin
-if (mobilEkran.matches) map.attributionControl.setPosition('topright');
-else map.zoomControl.setPosition('bottomright');
+// Ekran boyutuna göre harita üstündeki araçları yerleştirir
+function araclariYerlestir() {
+    let etiket = document.getElementById('yaya-etiketi');
+    let tema = document.getElementById('tema-dugmesi');
+    if (mobilEkran.matches) {
+        // Alttaki panel kaynak yazısını kapatmasın; yakınlaştırma iki parmakla yapılır
+        map.attributionControl.setPosition('topright');
+        map.zoomControl.remove();
+        document.body.prepend(etiket, tema);
+    } else {
+        // Masaüstünde etiket ve tema düğmesi panel başlığında durur
+        map.attributionControl.setPosition('bottomright');
+        map.zoomControl.setPosition('bottomright').addTo(map);
+        panel.querySelector('header').append(etiket, tema);
+    }
+}
+araclariYerlestir();
+mobilEkran.addEventListener('change', araclariYerlestir);
 
 let durumKutusu = document.getElementById('durum');
 let yerKarti = document.getElementById('yer-karti');
@@ -51,9 +78,11 @@ let yerKarti = document.getElementById('yer-karti');
 // Panel kapanınca ne kadar aşağı kayacak: yalnızca tutamaç ve sonuç görünür kalır
 function kaymayiHesapla() {
     if (!mobilEkran.matches || panel.classList.contains('yaziyor')) return;
-    // Rota varsa "Paylaş" düğmesi de görünür kalır
+    // Rota varsa "Paylaş" düğmesi de görünür kalır. Sade ekranda sonuç satırı
+    // gizliyse arama kutusu görünür kalır
     let paylas = document.getElementById('paylas');
     let sonOge = paylas.hidden ? durumKutusu : paylas;
+    if (sonOge.offsetHeight === 0) sonOge = bitisInput.closest('.girdi-grubu');
     let gorunen = sonOge.offsetTop + sonOge.offsetHeight + 12;
     panel.style.setProperty('--kayma', Math.max(0, panel.offsetHeight - gorunen) + 'px');
 }
@@ -189,6 +218,7 @@ function yazmaModunuAc(input) {
 function yazmaModunuKapat() {
     panel.classList.remove('yaziyor');
     panel.querySelectorAll('.aktif').forEach(grup => grup.classList.remove('aktif'));
+    if (typeof sadeGuncelle === "function") sadeGuncelle();
 }
 
 // Tutamaca veya sonuç satırına dokununca ya da sürükleyince panel açılır/kapanır
@@ -208,26 +238,91 @@ function aramaIcinSadelestir(metin) {
     return metin.toLocaleLowerCase('tr').replace(/ı/g, 'i').trim();
 }
 
-function listeyiDoldur(input, listeDiv, tumunuGoster = false) {
+// Telefonda kullanıcıyı boğmamak için listede aynı anda en fazla bu kadar yer gösterilir
+const MOBIL_SONUC = 5;
+const MOBIL_ONERI = 3;
+const ONERILEN_YERLER = ["Kütüphane", "Ekol Kafe", "İİBF"];   // konum bilinmiyorsa
+
+// Boş aramada telefonda gösterilen kısa öneri listesi: konum varsa en yakın yerler
+function kisaOneriler(input) {
+    let konum = koordinatRehberi["Mevcut Konumum"];
+    let isimler = ONERILEN_YERLER;
+    if (konum && kampusSinirlari.contains([konum[0][1], konum[0][0]])) {
+        let uzaklik = h => map.distance([konum[0][1], konum[0][0]], [h.koordinat[1], h.koordinat[0]]);
+        isimler = [...new Set([...hedefler].sort((a, b) => uzaklik(a) - uzaklik(b)).map(h => h.isim))];
+    }
+    isimler = isimler.filter(n => noktalar.includes(n)).slice(0, MOBIL_ONERI);
+    // Mevcut konum yalnızca başlangıç olarak anlamlıdır
+    return input === baslangicInput ? ["Mevcut Konumum", ...isimler] : isimler;
+}
+
+function listeyiDoldur(input, listeDiv, tumunuGoster = false, tumYerler = false) {
     listeDiv.innerHTML = "";
     let deger = tumunuGoster ? "" : aramaIcinSadelestir(input.value);
     let filtrelenmis = noktalar.filter(n => aramaIcinSadelestir(n).includes(deger));
+    let kisa = mobilEkran.matches && !deger && !tumYerler;
+    if (kisa) filtrelenmis = kisaOneriler(input);
+    else if (mobilEkran.matches && deger) filtrelenmis = filtrelenmis.slice(0, MOBIL_SONUC);
 
-    filtrelenmis.forEach(isim => {
+    function satirEkle(yazi, tikla, sinif, kap = listeDiv) {
         let div = document.createElement('div');
-        div.innerText = isim;
-        div.onclick = function() {
-            input.value = isim;
-            pinSecimi.delete(input);
-            listeDiv.style.display = "none";
-            input.blur();
-            yazmaModunuKapat();
-            if(baslangicInput.value && bitisInput.value) rotaCiz();
-        };
-        listeDiv.appendChild(div);
-    });
-    
-    listeDiv.style.display = filtrelenmis.length > 0 ? "block" : "none";
+        div.innerText = yazi;
+        if (sinif) div.className = sinif;
+        div.onclick = tikla;
+        kap.appendChild(div);
+    }
+
+    filtrelenmis.forEach(isim => satirEkle(isim, () => listedenSec(input, listeDiv, isim)));
+    if (filtrelenmis.length === 0) satirEkle("Bu adla bir yer bulunamadı", null, 'liste-bos');
+
+    if (kisa) {
+        satirEkle("Tüm yerleri göster", olay => {
+            olay.stopPropagation();     // liste yenilenirken pencere kapanmasın
+            listeyiDoldur(input, listeDiv, true, true);
+        }, 'liste-tumu');
+
+        // Boş hedef aramasında nokta eylemleri yan yana sunulur
+        if (input === bitisInput) {
+            let kap = document.createElement('div');
+            kap.className = 'liste-eylemler';
+            [["📌 Nokta işaretle", 'nokta-isaretle'], ["🙋 Buradayım", 'buradayim']].forEach(([yazi, kimlik]) => {
+                satirEkle(yazi, () => {
+                    listeDiv.style.display = "none";
+                    input.blur();
+                    yazmaModunuKapat();
+                    document.getElementById(kimlik).click();
+                }, 'liste-eylem', kap);
+            });
+            listeDiv.appendChild(kap);
+        }
+    }
+
+    listeDiv.style.display = "block";
+}
+
+function listedenSec(input, listeDiv, isim) {
+    input.value = isim;
+    pinSecimi.delete(input);
+    listeDiv.style.display = "none";
+    input.blur();
+
+    // Hedef seçildi ve başlangıç boşsa mevcut konumdan başlanır
+    if (input === bitisInput && !baslangicInput.value && isim !== "Mevcut Konumum" &&
+        koordinatRehberi["Mevcut Konumum"]) {
+        baslangicInput.value = "Mevcut Konumum";
+    }
+    yazmaModunuKapat();
+
+    if (baslangicInput.value && bitisInput.value) {
+        rotaCiz();
+    } else {
+        let eksik = bitisInput.value ? baslangicInput : bitisInput;
+        durumKutusu.innerText = eksik === baslangicInput
+            ? "Hedef seçildi. Şimdi başlangıcı seçin."
+            : "Başlangıç seçildi. Şimdi hedefi seçin.";
+        paneliKapat(false);
+        vurgula(eksik);
+    }
 }
 
 function aramaKutusunuBagla(input, listeDiv) {
@@ -380,12 +475,12 @@ map.locate({setView: false, watch: true, enableHighAccuracy: true});
 
 // Kategoriler: pin rengi, simgesi ve (varsa) "en yakın" düğmesinin yazısı
 const KATEGORILER = {
-    fakulte: { ad: "Fakülte", simge: "🎓", renk: "#2563eb" },
-    yemek:   { ad: "Yemek",   simge: "🍴", renk: "#ea580c", enYakin: "En yakın yemek yerine git" },
-    yurt:    { ad: "Yurt",    simge: "🛏️", renk: "#7c3aed" },
-    spor:    { ad: "Spor",    simge: "⚽", renk: "#16a34a", enYakin: "En yakın spor alanına git" },
-    hizmet:  { ad: "Hizmet",  simge: "ℹ️", renk: "#0f766e" },
-    gezi:    { ad: "Gezi",    simge: "🌳", renk: "#be185d" }
+    fakulte: { ad: "Fakülte", simge: "🎓", renk: "#1d3c8c" },
+    yemek:   { ad: "Yemek",   simge: "🍴", renk: "#c63f2d", enYakin: "En yakın yemek yerine git" },
+    yurt:    { ad: "Yurt",    simge: "🛏️", renk: "#6b4f9c" },
+    spor:    { ad: "Spor",    simge: "⚽", renk: "#117f7b", enYakin: "En yakın spor alanına git" },
+    hizmet:  { ad: "Hizmet",  simge: "ℹ️", renk: "#3d6fb5" },
+    gezi:    { ad: "Gezi",    simge: "🌳", renk: "#a3426c" }
 };
 
 // Pin üstündeki çizim simgeleri (24x24, beyaz çizgi)
@@ -467,11 +562,11 @@ function pinGoster(hedef) {
 // Birkaç yeri temsil eden sayılı daire; dokununca yakınlaşır
 function kumeEkle(uyeler) {
     let sinirlar = L.latLngBounds(uyeler.map(h => h.isaretci.getLatLng()));
-    let renk = seciliKategori ? KATEGORILER[seciliKategori].renk : "#334155";
+    let renk = seciliKategori ? KATEGORILER[seciliKategori].renk : "#1d3c8c";
     L.marker(sinirlar.getCenter(), {
         icon: L.divIcon({
             className: 'kume',
-            html: `<span style="background:${renk}">${uyeler.length}</span>`,
+            html: `<span style="background:${renk}"><b>${uyeler.length}</b></span>`,
             iconSize: [40, 40],
             iconAnchor: [20, 20]
         }),
@@ -487,7 +582,7 @@ map.on('zoomend', pinleriGuncelle);
 function kategoriSec(kategori) {
     seciliKategori = kategori;
     pinleriGuncelle();
-    document.querySelectorAll('#kategoriler button').forEach(d => {
+    document.querySelectorAll('#kategoriler button, #kisayollar button[data-kategori]').forEach(d => {
         let secili = d.dataset.kategori === (kategori || "");
         d.classList.toggle('secili', secili);
         d.setAttribute('aria-pressed', String(secili));
@@ -597,7 +692,7 @@ function bilgiKarti(hedef) {
     tur.innerText = hedef.kategoriler.map(k => KATEGORILER[k].ad).join(" · ");
 
     let dugmeler = document.createElement('div');
-    [["Buradan başla", false], ["Buraya git", true]].forEach(([yazi, hedefMi]) => {
+    [["🚶 Yürü", true], ["Buradan başla", false]].forEach(([yazi, hedefMi]) => {
         let dugme = document.createElement('button');
         dugme.type = "button";
         dugme.innerText = yazi;
@@ -608,12 +703,33 @@ function bilgiKarti(hedef) {
 
     let paylas = document.createElement('button');
     paylas.type = "button";
-    paylas.className = 'kart-paylas';
-    paylas.innerText = "🔗 Bu yeri paylaş";
+    paylas.innerText = "Paylaş";
     paylas.addEventListener('click', () => yeriPaylas(hedef));
+    dugmeler.appendChild(paylas);
 
-    kart.append(baslik, tur, dugmeler, paylas);
+    kart.append(baslik, tur, dugmeler);
+    yurumeSuresiEkle(tur, hedef.koordinat);
     return kart;
+}
+
+// Konum biliniyorsa kartta oraya kaç dakikada yürüneceği yazar
+async function yurumeSuresiEkle(satir, koordinat) {
+    let konum = koordinatRehberi["Mevcut Konumum"];
+    if (!konum) return;
+    try {
+        let cevap = await fetch('/api/rota', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ baslangic: konum[0], bitis: koordinat })
+        });
+        let veri = await cevap.json();
+        if (veri.durum !== "basarili") return;      // kampüs dışındaysa süre yazılmaz
+        let dakika = Math.max(1, Math.ceil(yolUzunlugu(veri.koordinatlar) / 80));
+        // textContent: kart henüz kayarken görünmez olsa da mevcut yazı korunur
+        satir.textContent += `, 🚶 ${dakika} dk yürüme`;
+    } catch (err) {
+        // Süre yalnızca ek bilgi: alınamazsa kart olduğu gibi kalır
+    }
 }
 
 function karttanSec(hedef, hedefMi, dugme) {
@@ -685,7 +801,11 @@ function ucIsareti(koordinat, harf) {
     }).addTo(ucIsaretleri);
 }
 
-document.getElementById('yer-degistir').addEventListener('click', () => {
+// Rota görünümündeki küçük ⇅ düğmesi aynı işi yapar; panel inik kalır
+document.getElementById('hizli-degistir').addEventListener('click', () => yonuDegistir(true));
+document.getElementById('yer-degistir').addEventListener('click', () => yonuDegistir(false));
+
+function yonuDegistir(paneliIndir) {
     let eskiBas = { isim: baslangicInput.value, pin: pinSecimi.get(baslangicInput) };
     let eskiBit = { isim: bitisInput.value, pin: pinSecimi.get(bitisInput) };
     [[baslangicInput, eskiBit], [bitisInput, eskiBas]].forEach(([input, eski]) => {
@@ -711,13 +831,13 @@ document.getElementById('yer-degistir').addEventListener('click', () => {
         [{ transform: "rotate(0deg)" }, { transform: "rotate(180deg)" }], { duration: 400 });
 
     if (baslangicInput.value && bitisInput.value) {
-        // Panel açık kalsın ki değişiklik görülsün
-        rotaCiz({ paneliIndir: false, not: "⇅ Yön değişti" });
+        // Alttaki düğmeden gelindiyse panel açık kalsın ki kutuların değiştiği görülsün
+        rotaCiz({ paneliIndir, not: "⇅ Yön değişti" });
     } else {
         rotayiSil();
         durumKutusu.innerText = "⇅ Yer değiştirildi";
     }
-});
+}
 
 document.getElementById('temizle').addEventListener('click', () => {
     baslangicInput.value = "";
@@ -754,7 +874,8 @@ function htmlKacis(metin) {
 }
 
 // paneliIndir: telefonda rota çizilince panel iner; not: sonucun başına eklenen açıklama
-function rotaCiz({ paneliIndir = true, not = "" } = {}) {
+// sessiz: yoldan sapınca yapılan yenileme; harita ve panel yerinden oynamaz
+function rotaCiz({ paneliIndir = true, not = "", sessiz = false } = {}) {
     let basIsim = baslangicInput.value;
     let bitIsim = bitisInput.value;
 
@@ -767,7 +888,8 @@ function rotaCiz({ paneliIndir = true, not = "" } = {}) {
     let bitAdaylar = pinSecimi.has(bitisInput) ? [pinSecimi.get(bitisInput)] : koordinatRehberi[bitIsim];
     let [basKoor, bitKoor] = enYakinCift(basAdaylar, bitAdaylar);
 
-    document.getElementById('durum').innerText = "Rota hesaplanıyor... ⏳";
+    if (!sessiz) document.getElementById('durum').innerText = "Rota hesaplanıyor... ⏳";
+    let yenilenen = sonRota;     // sessiz yenilemede beklerken rota değişti mi
 
     fetch('/api/rota', {
         method: 'POST',
@@ -776,11 +898,18 @@ function rotaCiz({ paneliIndir = true, not = "" } = {}) {
     })
     .then(res => res.json())
     .then(data => {
+        // Kullanıcı bu arada rotayı sildiyse veya değiştirdiyse yenileme uygulanmaz
+        if (sessiz && sonRota !== yenilenen) return;
+
         if(data.durum === "basarili") {
             rotayiSil();
 
             let latLngs = data.koordinatlar.map(koor => [koor[1], koor[0]]);
-            rotaKatmani = L.polyline(latLngs, { color: '#3498db', weight: 6, opacity: 0.8 }).addTo(map);
+            // Beyaz kenarlı mercan hat: haritadaki yollardan kolayca ayrılır
+            rotaKatmani = L.layerGroup([
+                L.polyline(latLngs, { color: rotaKenarRengi(), weight: 11, opacity: 0.95 }),
+                L.polyline(latLngs, { color: '#c63f2d', weight: 6, opacity: 1 })
+            ]).addTo(map);
             
             let toplamMesafe = 0;
             for (let i = 0; i < latLngs.length - 1; i++) {
@@ -792,19 +921,29 @@ function rotaCiz({ paneliIndir = true, not = "" } = {}) {
             
             // İsimler kullanıcıdan gelebilir (işaretlenen noktalar): HTML'e kaçışlanarak yazılır
             let ek = typeof ozelNotu === "function" ? ozelNotu(bitIsim) : "";
-            document.getElementById('durum').innerHTML = `${not ? `${not}<br>${htmlKacis(basIsim)} → ` : "🎯 "}${htmlKacis(bitIsim)} <br> 📏 Mesafe: ${mesafeMetre} m <br> 🚶 Süre: ~${sureDk} dk${ek ? `<br>${htmlKacis(ek)}` : ""}`;
+            // Sonuç, iki durak arasındaki bir hat gibi gösterilir
+            document.getElementById('durum').innerHTML = `
+                <span class="hat">
+                    ${not ? `<span class="hat-not">${htmlKacis(not)}</span>` : ""}
+                    <span class="hat-ust"><b>🚶 ${sureDk} dk</b><span>${mesafeMetre} m</span></span>
+                    <span class="hat-durak">${htmlKacis(basIsim)}</span>
+                    <span class="hat-yol">yürüyerek</span>
+                    <span class="hat-durak son">${htmlKacis(bitIsim)}</span>
+                    ${ek ? `<span class="hat-not">${htmlKacis(ek)}</span>` : ""}
+                </span>`;
             vurgula(durumKutusu);
-            sonRota = { basIsim, bitIsim, basKoor, bitKoor };
+            sonRota = { basIsim, bitIsim, basKoor, bitKoor, yol: latLngs };
             paylasDugmesi.hidden = false;
 
             // Mevcut konum zaten mavi noktayla gösterildiği için A konmaz
             if (basIsim !== "Mevcut Konumum") ucIsareti(basKoor, "A");
             if (bitIsim !== "Mevcut Konumum") ucIsareti(bitKoor, "B");
 
-            let sinirlar = rotaKatmani.getBounds()
+            let sinirlar = L.latLngBounds(latLngs)
                 .extend([basKoor[1], basKoor[0]])
                 .extend([bitKoor[1], bitKoor[0]]);
 
+            if (sessiz) return;
             map.closePopup();
             if (mobilEkran.matches) {
                 // Paneli indir ve rotayı panelin üstünde kalan alana ortala
@@ -823,13 +962,189 @@ function rotaCiz({ paneliIndir = true, not = "" } = {}) {
                     paddingBottomRight: [50, 50]
                 });
             }
-        } else {
+        } else if (!sessiz) {
             // Önceki rota ekranda kalıp yanıltmasın
             rotayiSil();
             document.getElementById('durum').innerText = (data.mesaj || "Yol bulunamadı") + " ❌";
         }
     })
     .catch(err => {
-        document.getElementById('durum').innerText = "Sunucuya bağlanılamadı!";
+        // Sessiz yenileme başarısızsa eldeki rota ekranda kalır
+        if (!sessiz) document.getElementById('durum').innerText = "Sunucuya bağlanılamadı!";
     });
+}
+
+// --- Telefonda sade açılış ekranı ---
+// Hiçbir şey seçilmemişken yalnızca arama kutusu ve kısayollar görünür.
+const VARSAYILAN_DURUM = "Hedeflerinizi arayın veya seçin";
+let digerAcik = false;        // "Diğer" ile tüm seçenekler açıldı mı
+
+function sadeGuncelle() {
+    let sade = !baslangicInput.value && !bitisInput.value && !rotaKatmani && !digerAcik;
+    // Yazarken ekran düzeni değişmesin
+    if (panel.classList.contains('yaziyor')) sade = panel.classList.contains('sade');
+
+    panel.classList.toggle('sade', sade);
+    panel.classList.toggle('bos-durum', durumKutusu.innerText.trim() === VARSAYILAN_DURUM);
+    bitisInput.placeholder = sade && mobilEkran.matches
+        ? "Nereye yürüyorsun?" : "Bina adı yazın veya seçin...";
+    kaymayiHesapla();
+}
+
+document.querySelectorAll('#kisayollar button[data-kategori]').forEach(dugme => {
+    let kategori = dugme.dataset.kategori;
+    // Seçili kısayola yeniden dokunmak süzgeci kaldırır
+    dugme.addEventListener('click', () =>
+        kategoriSec(seciliKategori === kategori ? null : kategori));
+});
+
+document.getElementById('diger').addEventListener('click', () => {
+    digerAcik = true;
+    paneliKapat(false);
+    sadeGuncelle();
+});
+
+document.getElementById('temizle').addEventListener('click', () => {
+    digerAcik = false;
+    sadeGuncelle();
+});
+
+// Sonuç satırı her değiştiğinde ekran durumu yeniden belirlenir
+new MutationObserver(sadeGuncelle)
+    .observe(durumKutusu, { childList: true, characterData: true, subtree: true });
+mobilEkran.addEventListener('change', sadeGuncelle);
+sadeGuncelle();
+
+// --- Açık / koyu panel ---
+// Yalnızca panel, kart ve pencereler değişir; harita aynı kalır.
+let temaDugmesi = document.getElementById('tema-dugmesi');
+
+function temaDugmesiniGuncelle() {
+    let koyu = document.documentElement.classList.contains('koyu');
+    temaDugmesi.innerText = koyu ? "☀️" : "🌙";
+    let yazi = koyu ? "Açık temaya geç" : "Koyu temaya geç";
+    temaDugmesi.setAttribute('aria-label', yazi);
+    temaDugmesi.title = yazi;
+}
+
+temaDugmesi.addEventListener('click', () => {
+    let koyu = document.documentElement.classList.toggle('koyu');
+    try {
+        localStorage.setItem('tema', koyu ? "koyu" : "acik");
+    } catch (err) { /* seçim yalnızca bu açılışta geçerli olur */ }
+    temaDugmesiniGuncelle();
+    if (binaKatmani) binaKatmani.setStyle(binaStili());
+    if (rotaKatmani) rotaKatmani.getLayers()[0].setStyle({ color: rotaKenarRengi() });
+});
+temaDugmesiniGuncelle();
+
+// --- "Konumuma git" ve telefonda açılış görünümü ---
+// Noktayı panelin üstünde kalan alanın ortasına getirir
+function gorunurAlanaGetir(sinirlar, enYakin, canlandir = true) {
+    let altBosluk = mobilEkran.matches ? panel.offsetHeight + 20 : 40;
+    map.fitBounds(sinirlar, {
+        animate: canlandir,
+        maxZoom: enYakin,
+        paddingTopLeft: mobilEkran.matches ? [20, 60] : [panel.offsetWidth + 40, 40],
+        paddingBottomRight: [20, altBosluk]
+    });
+}
+
+document.getElementById('konum-dugmesi').addEventListener('click', () => {
+    let konum = konumIsaretcisi && konumIsaretcisi.getLatLng();
+    if (!konum || !kampusSinirlari.contains(konum)) {
+        durumKutusu.innerText = konum
+            ? "Konumun kampüs haritasının dışında görünüyor."
+            : "Konumun henüz alınamadı. Konum iznini kontrol et.";
+        paneliKapat(false);
+        vurgula(durumKutusu);
+        return;
+    }
+    kartiKapat();
+    gorunurAlanaGetir(L.latLngBounds([konum, konum]), 17);
+});
+
+// Telefonda tüm yerler panelin üstünde kalacak şekilde açılır (linkle gelinmediyse)
+hedeflerHazir.then(() => {
+    if (!mobilEkran.matches || window.location.search.match(/nere|nokta/)) return;
+    // Açılışta canlandırma yok: hemen yapılan dokunuşlarla çakışmasın
+    gorunurAlanaGetir(L.latLngBounds(hedefler.map(h => h.isaretci.getLatLng())), 16, false);
+});
+
+// --- Yürürken takip ---
+// Rota "Mevcut Konumum"dan başlıyorsa kalan yol, süre ve mesafe canlı güncellenir.
+const VARIS_MESAFESI = 20;     // yolun sonuna bu kadar kala varılmış sayılır (m)
+const SAPMA_MESAFESI = 30;     // rotadan bu kadar uzaklaşınca sapma sayılır (m)
+const SAPMA_SAYISI = 3;        // art arda bu kadar sapmalı konumda rota yenilenir
+
+// Konumun rota üzerindeki en yakın noktasını ve oradan sonraki yolu bulur
+function yoldakiYer(konum, yol) {
+    const Z = 18;
+    let p = map.project(konum, Z);
+    let enIyi = null;
+    for (let i = 0; i < yol.length - 1; i++) {
+        let a = map.project(yol[i], Z), b = map.project(yol[i + 1], Z);
+        let nokta = map.unproject(L.LineUtil.closestPointOnSegment(p, L.point(a), L.point(b)), Z);
+        let uzaklik = map.distance(konum, nokta);
+        if (!enIyi || uzaklik < enIyi.uzaklik) enIyi = { uzaklik, kalanYol: [nokta, ...yol.slice(i + 1)] };
+    }
+    return enIyi;
+}
+
+function takipEt(olay) {
+    let rota = sonRota;
+    if (!rota || rota.vardi || rota.basIsim !== "Mevcut Konumum" || rota.bitIsim === "Mevcut Konumum") return;
+    if (rota.yol.length < 2) return;
+    let hassasiyet = olay.accuracy || 0;
+    if (hassasiyet > 60) return;     // konum çok belirsizse karar verilmez
+
+    let yer = yoldakiYer(olay.latlng, rota.yol);
+
+    // Yoldan sapma: tek bir hatalı ölçüm rotayı değiştirmesin
+    if (yer.uzaklik > Math.max(SAPMA_MESAFESI, hassasiyet)) {
+        rota.sapma = (rota.sapma || 0) + 1;
+        if (rota.sapma >= SAPMA_SAYISI) {
+            rota.sapma = 0;
+            rotaCiz({ sessiz: true, not: "Rota yenilendi" });
+        }
+        return;
+    }
+    rota.sapma = 0;
+
+    let kalan = yer.uzaklik;
+    for (let i = 0; i < yer.kalanYol.length - 1; i++) {
+        kalan += map.distance(yer.kalanYol[i], yer.kalanYol[i + 1]);
+    }
+    // Geçilen kısım haritadan silinir
+    rotaKatmani.getLayers().forEach(cizgi => cizgi.setLatLngs(yer.kalanYol));
+
+    let ust = durumKutusu.querySelector('.hat-ust');
+    if (!ust) return;
+    if (kalan <= VARIS_MESAFESI) {
+        rota.vardi = true;
+        // Yol bazı binalarda kapıdan önce bitiyor: kalan kuş uçuşu mesafe söylenir
+        let hedefe = Math.round(map.distance(olay.latlng, [rota.bitKoor[1], rota.bitKoor[0]]));
+        ust.querySelector('b').textContent = "🎉 Vardın";
+        ust.querySelector('span').textContent = hedefe > 25 ? `hedef yaklaşık ${hedefe} m ileride` : "";
+        vurgula(durumKutusu);
+        return;
+    }
+    ust.querySelector('b').textContent = `🚶 ${Math.ceil(kalan / 80)} dk`;
+    ust.querySelector('span').textContent = `${Math.round(kalan)} m kaldı`;
+}
+
+map.on('locationfound', takipEt);
+
+// --- Telefon klavyesi ---
+// Klavye açılınca yazma paneli onun üstünde kalsın diye klavye yüksekliği ölçülür
+if (window.visualViewport) {
+    const gorunum = window.visualViewport;
+    const klavyeyiOlc = () => {
+        let klavye = Math.max(0, window.innerHeight - gorunum.height - gorunum.offsetTop);
+        document.documentElement.style.setProperty('--klavye', klavye + 'px');
+        document.documentElement.style.setProperty('--gorunen', gorunum.height + 'px');
+    };
+    gorunum.addEventListener('resize', klavyeyiOlc);
+    gorunum.addEventListener('scroll', klavyeyiOlc);
+    klavyeyiOlc();
 }

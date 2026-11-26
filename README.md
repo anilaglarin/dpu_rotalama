@@ -18,7 +18,7 @@ Projenin temel amacı; gerçek harita koordinatları üzerinden alınan fiziksel
 
 ### Telefon
 
-<img src="screenshots/mobil.png" alt="DPÜ Kampüs Rotalama - telefon görünümü" width="320">
+<img src="screenshots/telefon-acilis.png" alt="Telefonda açılış ekranı" width="300"> <img src="screenshots/mobil.png" alt="Telefonda rota görünümü" width="300">
 
 ---
 
@@ -26,18 +26,30 @@ Projenin temel amacı; gerçek harita koordinatları üzerinden alınan fiziksel
 
 ### Yer bulma
 - Kampüste **39 nokta**, altı kategoride: Fakülte, Yemek, Yurt, Spor, Hizmet, Gezi
-- Yer türüne göre simgeli pinler ve **kategori süzgeci**
-- Birbirine yakın yerler uzaktan bakınca **sayılı dairelerde** toplanır
+- Yer türüne göre simgeli, elmas biçimli işaretler ve **kategori süzgeci**
+- Birbirine yakın yerler uzaktan bakınca **sayılı gruplarda** toplanır
 - **Türkçe karakterlere duyarlı arama** ("iibf" yazınca "İİBF" bulunur)
 - Yemek ve Spor için **"En yakın yere git"** düğmesi (yürüyüş mesafesine göre)
-- Her yer için bilgi kartı: *Buradan başla*, *Buraya git*, *Bu yeri paylaş*
+- Her yer için bilgi kartı: **Yürü**, *Buradan başla*, *Paylaş*; konum açıksa yürüme süresi
 
 ### Rota
 - Dijkstra ile en kısa yürüyüş güzergâhı, mesafe ve tahmini süre
-- Başlangıç (A) ve bitiş (B) işaretleri
-- Tek dokunuşla başlangıç ve bitişi değiştirme veya temizleme
-- Canlı konum ("Mevcut Konumum") ve telefonun baktığı yönü gösteren **yön oku**
+- Sonuç, iki durak arasındaki bir **hat** olarak gösterilir; haritada başlangıç (A) ve bitiş (B)
+- Tek dokunuşla yönü değiştirme veya temizleme
+- Canlı konum ("Mevcut Konumum"), telefonun baktığı yönü gösteren **yön oku** ve **Konumuma git** düğmesi
 - Kampüs yol ağından uzak konumlar için uyarı
+
+### Yürürken takip
+Rota "Mevcut Konumum"dan başladığında:
+- Kalan süre ve mesafe güncellenir, geçilen yol haritadan silinir
+- Rotadan yaklaşık 30 metre uzaklaşılırsa rota kendiliğinden yenilenir
+- Yolun sonuna gelince **"Vardın"** yazar; bina kapıdan uzaktaysa kalan mesafe belirtilir
+- Takip için telefon ekranının açık kalması gerekir
+
+### Görünüm
+- **Kütahya çinisinden** esinlenen tasarım: kobalt mavi, firuze, mercan ve çini bordürü
+- **Açık / koyu tema**: koyu temada harita ve işaretler de kısılır, seçim tarayıcıda hatırlanır
+- Haritanın yürüyenler için olduğunu belirten **"Yaya haritası"** etiketi
 
 ### Paylaşım
 - **Rota paylaşımı:** link veya QR kod; istenirse başlangıç, linki açanın konumu olur
@@ -47,20 +59,23 @@ Projenin temel amacı; gerçek harita koordinatları üzerinden alınan fiziksel
 - QR kodu resim olarak indirme (afiş ve tabelalar için)
 
 ### Telefon deneyimi
+- Sade açılış: "Nereye yürüyorsun?" kutusu ve dört kısayol (Fakülte, Yemek, Spor, Diğer)
+- Küçük arama penceresi: üç öneri (konum açıksa en yakın yerler), yazarken en fazla beş sonuç
+- Arama kutusu altta kalır, liste yukarı doğru açılır
 - Parmakla sürüklenen alt panel ve alttan kayan yer kartı
-- Yazarken yukarı taşınan arama kutusu
 
 ---
 
 ## 💡 Kullanım
 
 ### Rota almak
-1. **Nereden** ve **Nereye** kutularından yer seçin, ya da haritadaki bir pine dokunup *Buradan başla* / *Buraya git* deyin.
-2. Rota, mesafe ve süre ekranda görünür.
-3. Göndermek isterseniz **Rotayı paylaş** düğmesine basın.
+1. Telefonda **"Nereye yürüyorsun?"** kutusundan hedef seçin; konumunuz açıksa rota oradan çizilir. Bilgisayarda **Nereden** ve **Nereye** kutularını doldurun.
+2. Ya da haritadaki bir işarete dokunup **Yürü** veya *Buradan başla* deyin.
+3. Rota, süre ve mesafe ekranda görünür; yürüdükçe güncellenir.
+4. Göndermek isterseniz **Rotayı paylaş** düğmesine basın.
 
 ### Etkinlik noktası paylaşmak
-1. Haritada etkinliğin yapılacağı yere **basılı tutun** (veya *Nokta işaretle* düğmesine basıp dokunun).
+1. Haritada etkinliğin yapılacağı yere **basılı tutun** (veya *Nokta işaretle* düğmesine basıp dokunun; telefonda bu düğme arama penceresindedir).
 2. Ad yazın; isterseniz tarih ve saat ekleyin.
 3. Oluşan **linki gönderin** veya **QR kodu** afişe koyun.
 4. Linki açan kişi noktayı görür; konum izni verirse oradan yürüyüş rotası çizilir.
@@ -103,7 +118,7 @@ dpu_rotalama/
 ├── templates/
 │   └── index.html                 # Arayüz iskeleti
 ├── static/
-│   ├── app.js                     # Harita, arama, rota, panel ve konum
+│   ├── app.js                     # Harita, arama, rota, takip, panel ve tema
 │   ├── paylas.js                  # Link, QR kod ve linkten açma
 │   ├── nokta.js                   # Nokta işaretleme ve "Buradayım"
 │   ├── style.css                  # Masaüstü ve telefon tasarımı
@@ -188,7 +203,7 @@ dpu_rotalama/
 
 - Python 3.10 veya üzeri
 - pip
-- İnternet bağlantısı (harita parçaları, Leaflet ve QR kütüphanesi için)
+- İnternet bağlantısı (harita parçaları, Leaflet, QR kütüphanesi ve yazı tipi için)
 
 ### 2. Repoyu Klonlayın
 
@@ -250,6 +265,7 @@ http://127.0.0.1:5000
 **Bilinen sınırlar**
 - Rota, hedefe en yakın yol düğümünde biter; bazı binalarda kapıya kadar ulaşmaz.
 - Yürüyüş süresi dakikada 80 metre varsayımıyla hesaplanır.
+- Yürürken takip, telefonun GPS doğruluğuna bağlıdır ve ekran kilitliyken çalışmaz.
 - Basılan QR kodlardaki bilgi sonradan değiştirilemez.
 
 **Planlananlar**

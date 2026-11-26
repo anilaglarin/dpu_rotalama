@@ -97,19 +97,21 @@ function noktaKarti() {
 
     let dugmeler = document.createElement('div');
     dugmeler.append(
-        kartDugmesi("Paylaş / QR", "", () => noktayiPaylas()),
-        kartDugmesi("Buraya git", "ana", dugme =>
-            karttanSec({ isim: nokta.anahtar, koordinat: nokta.koordinat }, true, dugme))
+        kartDugmesi("🚶 Yürü", "ana", dugme =>
+            karttanSec({ isim: nokta.anahtar, koordinat: nokta.koordinat }, true, dugme)),
+        kartDugmesi("Paylaş / QR", "", () => noktayiPaylas())
     );
 
-    let kaldir = kartDugmesi("Bu işareti kaldır", "kart-paylas", () => {
+    let kaldir = kartDugmesi("Bu işareti kaldır", "", () => {
         map.closePopup();
         kartiKapat();
         ozelNoktayiSil();
         durumKutusu.innerText = "İşaret kaldırıldı";
     });
 
-    kart.append(baslik, aciklama, dugmeler, kaldir);
+    dugmeler.appendChild(kaldir);
+    kart.append(baslik, aciklama, dugmeler);
+    yurumeSuresiEkle(aciklama, nokta.koordinat);
     return kart;
 }
 
