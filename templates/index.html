@@ -6,9 +6,24 @@
     <title>DPÜ Rotalama Sistemi</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Alegreya+Sans:wght@400;500;700&display=swap" />
     <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}" />
+    <script>
+        // Seçilen tema sayfa çizilmeden uygulanır ki açılışta renk sıçraması olmasın
+        try {
+            if (localStorage.getItem('tema') === 'koyu') document.documentElement.classList.add('koyu');
+        } catch (err) { /* tarayıcı saklamaya izin vermiyorsa açık tema kalır */ }
+    </script>
 </head>
 <body>
+    <div id="yaya-etiketi">🚶 Yaya haritası</div>
+    <button type="button" id="tema-dugmesi"></button>
+    <button type="button" id="konum-dugmesi" title="Konumuma git" aria-label="Konumuma git">
+        <svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
+            <circle cx="12" cy="12" r="7"/><circle cx="12" cy="12" r="2.5" fill="currentColor"/><path d="M12 1v4M12 19v4M1 12h4M19 12h4"/>
+        </svg>
+    </button>
+
     <div id="kontrol-paneli">
         <button type="button" id="panel-tutamac" aria-label="Paneli aç veya kapat" aria-expanded="true"></button>
         <header>
@@ -16,16 +31,24 @@
             <p>Evliya Çelebi Yerleşkesi · Yaya yol tarifi</p>
         </header>
 
+        <!-- Telefonun sade açılış ekranındaki kısayollar -->
+        <div id="kisayollar" role="group" aria-label="Kısayollar">
+            <button type="button" data-kategori="fakulte"><span aria-hidden="true"><b>🎓</b></span>Fakülte</button>
+            <button type="button" data-kategori="yemek"><span aria-hidden="true"><b>🍴</b></span>Yemek</button>
+            <button type="button" data-kategori="spor"><span aria-hidden="true"><b>⚽</b></span>Spor</button>
+            <button type="button" id="diger"><span aria-hidden="true"><b>＋</b></span>Diğer</button>
+        </div>
+
         <div id="kategoriler" role="group" aria-label="Yer türüne göre süz"></div>
         <button type="button" id="en-yakin" hidden></button>
 
-        <div class="girdi-grubu arama-kutusu">
+        <div class="girdi-grubu arama-kutusu baslangic-grubu">
             <label>Nereden:</label>
             <input type="text" id="baslangic-secim" placeholder="Bina adı yazın veya seçin..." autocomplete="off">
             <div id="baslangic-liste" class="acilir-liste"></div>
         </div>
         
-        <div class="girdi-grubu arama-kutusu">
+        <div class="girdi-grubu arama-kutusu hedef-grubu">
             <label>Nereye:</label>
             <input type="text" id="bitis-secim" placeholder="Bina adı yazın veya seçin..." autocomplete="off">
             <div id="bitis-liste" class="acilir-liste"></div>
@@ -41,7 +64,10 @@
             <button type="button" id="buradayim">🙋 Buradayım</button>
         </div>
         <p id="durum">Hedeflerinizi arayın veya seçin</p>
-        <button type="button" id="paylas" hidden>🔗 Rotayı paylaş</button>
+        <div id="rota-eylemleri">
+            <button type="button" id="paylas" hidden>🔗 Rotayı paylaş</button>
+            <button type="button" id="hizli-degistir" title="Yönü değiştir" aria-label="Yönü değiştir">⇅</button>
+        </div>
         <p id="gps-uyari"></p>
     </div>
 

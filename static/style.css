@@ -809,14 +809,13 @@ button:hover {
     }
 
     /* Yazma modu: panel üste çıkar, klavye listeyi kapatmaz */
+    /* Yazma modu: panel altta, klavyenin hemen üstünde kalır; liste yukarı doğru açılır */
     #kontrol-paneli.yaziyor {
-        top: 0;
-        bottom: auto;
+        bottom: var(--klavye, 0px);
         z-index: 1100;
         max-height: none;
-        padding-top: 12px;
-        border-radius: 0 0 18px 18px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+        overflow: hidden;
+        padding-bottom: 12px;
         transform: none;
         transition: none;
     }
@@ -825,14 +824,736 @@ button:hover {
         display: none;
     }
 
-    #kontrol-paneli.yaziyor .acilir-liste {
+    #kontrol-paneli.yaziyor > .aktif {
+        display: flex;
+        flex-direction: column;
+        margin: 10px 0 0;
+    }
+
+    /* Sıra: etiket, liste, parmağın altında kalan yazı kutusu */
+    #kontrol-paneli.yaziyor .aktif .acilir-liste {
         position: static;
+        order: 1;
         max-height: 40vh;
-        max-height: 40dvh;
+        max-height: min(300px, calc(var(--gorunen, 100dvh) * 0.42));
+        margin-bottom: 6px;
+        border-top: 1px solid var(--cizgi, #bdc3c7);
+        border-radius: 6px;
+    }
+
+    #kontrol-paneli.yaziyor .aktif input {
+        order: 2;
     }
 
     .acilir-liste div {
         padding: 13px 10px;
         font-size: 15px;
+    }
+}
+
+/* ==========================================================
+   ÇİNİ GÖRÜNÜMÜ (Kütahya çinisi: kobalt, firuze, mercan)
+   Bu bölüm yalnızca görünümü değiştirir.
+   ========================================================== */
+:root {
+    --kobalt: #1d3c8c;
+    --firuze: #117f7b;
+    --mercan: #c63f2d;
+    --sir: #fbfdfc;                 /* çini sırı beyazı */
+    --sir-golge: #e8f1ee;
+    --metin-soluk: #4d5874;
+    --kose: 5px;
+    --yazi-ana: #1d3c8c;           /* başlık ve yazılar */
+    --cizgi: #1d3c8c;              /* kenarlıklar */
+    --dugme: #1d3c8c;              /* dolu düğmeler */
+    --alan: #ffffff;               /* yazı kutusu zemini */
+    --parlama: #bfe6e2;
+    --cini: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20'%3E%3Crect width='20' height='20' fill='%231d3c8c'/%3E%3Cpath d='M10 2L12.5 7.5L18 10L12.5 12.5L10 18L7.5 12.5L2 10L7.5 7.5Z' fill='%23fff'/%3E%3Ccircle cx='10' cy='10' r='3' fill='%23c63f2d'/%3E%3Cpath d='M0 0H5L0 5ZM20 0V5L15 0ZM0 20V15L5 20ZM20 20H15L20 15Z' fill='%2317938f'/%3E%3C/svg%3E");
+}
+
+body,
+button,
+input,
+.leaflet-container {
+    font-family: 'Alegreya Sans', 'Segoe UI', sans-serif;
+}
+
+/* Harita renkleri yalnızca biraz canlandırılır; bu satır silinirse eski haline döner */
+.leaflet-tile-pane {
+    filter: saturate(1.15);
+}
+
+/* Bu haritanın yürüyenler için olduğunu belirtir */
+#yaya-etiketi {
+    display: inline-block;
+    padding: 4px 10px;
+    border: 2px solid var(--cizgi);
+    border-radius: var(--kose);
+    background: var(--sir);
+    color: var(--yazi-ana);
+    font-size: 14px;
+    font-weight: 700;
+}
+
+/* Panel: üstte çini bordürü, geri kalanı sade */
+#kontrol-paneli {
+    background: var(--sir);
+    border-radius: var(--kose);
+}
+
+#kontrol-paneli::before {
+    content: "";
+    display: block;
+    height: 20px;
+    margin: -20px -20px 14px;
+    background: var(--cini) repeat-x;
+    border-radius: var(--kose) var(--kose) 0 0;
+}
+
+#kontrol-paneli header {
+    border-bottom: none;
+    padding-bottom: 0;
+}
+
+#kontrol-paneli header h3 {
+    color: var(--yazi-ana);
+    font-size: 22px;
+    font-weight: 700;
+}
+
+#kontrol-paneli header p,
+.girdi-grubu label,
+.bilgi-karti small {
+    color: var(--metin-soluk);
+}
+
+.girdi-grubu input {
+    border: 2px solid var(--cizgi);
+    border-radius: var(--kose);
+    background: var(--alan);
+    color: var(--yazi-ana);
+}
+
+#kontrol-paneli .girdi-grubu input:focus {
+    border-color: var(--firuze);
+    box-shadow: 0 0 0 3px rgba(17, 127, 123, 0.25);
+}
+
+button {
+    background-color: var(--dugme);
+    border-radius: var(--kose);
+}
+
+button:hover {
+    background-color: #162f70;
+}
+
+#eylemler button.ikincil,
+#nokta-eylemleri button,
+#paylas-kapat,
+#paylas-kapat:hover,
+#nokta-vazgec,
+#nokta-vazgec:hover {
+    background: var(--sir);
+    border: 1.5px solid var(--cizgi);
+    color: var(--yazi-ana);
+}
+
+#nokta-eylemleri button:hover {
+    background: var(--sir-golge);
+}
+
+#paylas,
+#paylas-indir {
+    background: var(--firuze);
+}
+
+#en-yakin {
+    background: var(--mercan);
+}
+
+#kategoriler button {
+    border-radius: var(--kose);
+    background: var(--sir);
+}
+
+#kategoriler button.secili {
+    background: var(--renk);
+}
+
+#kategoriler button[data-kategori=""] {
+    --renk: #1d3c8c;
+}
+
+#kontrol-paneli #durum {
+    border-radius: var(--kose);
+    background: var(--sir-golge);
+    color: var(--yazi-ana);
+    font-size: 15px;
+}
+
+/* Rota sonucu: iki durak arasındaki hat */
+.hat {
+    display: block;
+    text-align: left;
+}
+
+.hat > span {
+    display: block;
+}
+
+.hat .hat-ust {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 8px;
+}
+
+.hat-ust b {
+    font-size: 26px;
+    color: var(--yazi-ana);
+}
+
+.hat-ust span {
+    color: var(--metin-soluk);
+}
+
+.hat-durak,
+.hat-yol {
+    position: relative;
+    padding-left: 28px;
+}
+
+.hat-durak {
+    font-size: 16px;
+    line-height: 22px;
+}
+
+.hat-yol {
+    padding-top: 3px;
+    padding-bottom: 3px;
+    color: var(--metin-soluk);
+    font-size: 13px;
+    font-weight: 400;
+}
+
+/* Hat çizgisi */
+.hat-yol::before {
+    content: "";
+    position: absolute;
+    top: -6px;
+    bottom: -6px;
+    left: 6px;
+    width: 5px;
+    background: var(--mercan);
+}
+
+/* Durak halkaları */
+.hat-durak::before {
+    content: "";
+    position: absolute;
+    z-index: 1;
+    top: 3px;
+    left: 0;
+    box-sizing: border-box;
+    width: 17px;
+    height: 17px;
+    border: 4px solid var(--cizgi);
+    border-radius: 50%;
+    background: white;
+}
+
+.hat-durak.son::before {
+    border-color: var(--mercan);
+}
+
+.hat-not {
+    margin: 4px 0;
+    color: var(--metin-soluk);
+    font-size: 13px;
+}
+
+#rota-eylemleri {
+    display: flex;
+    gap: 6px;
+}
+
+#hizli-degistir,
+#hizli-degistir:hover {
+    flex: 0 0 48px;
+    margin-top: 8px;
+    border: 1.5px solid var(--cizgi);
+    background: var(--sir);
+    color: var(--yazi-ana);
+    font-size: 18px;
+}
+
+/* Paylaş düğmesi gizliyken yanındaki ⇅ de gizlenir */
+#paylas[hidden] + #hizli-degistir {
+    display: none;
+}
+
+/* Yer kartı: büyük "Yürü", altında küçük düğmeler */
+.bilgi-karti div {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+}
+
+.bilgi-karti button.ana {
+    grid-column: 1 / -1;
+    font-size: 16px;
+}
+
+@media (max-width: 768px) {
+    #yer-karti .bilgi-karti button.ana {
+        padding: 15px 8px;
+        font-size: 18px;
+    }
+
+    #rota-eylemleri {
+        order: -1;
+        margin-bottom: 10px;
+    }
+
+    #rota-eylemleri button {
+        margin: 0;
+    }
+}
+
+/* Kısayollar yalnızca telefonun sade ekranında görünür */
+#kisayollar {
+    display: none;
+}
+
+@media (max-width: 768px) {
+    /* Sade açılış: arama kutusu, elmas kısayollar ve gerekirse "en yakın" */
+    #kontrol-paneli.sade:not(.yaziyor) > :not(#panel-tutamac):not(#durum):not(#kisayollar):not(#en-yakin):not(.girdi-grubu),
+    #kontrol-paneli.sade:not(.yaziyor) .girdi-grubu label,
+    #kontrol-paneli.sade.bos-durum > #durum {
+        display: none;
+    }
+
+    #kontrol-paneli.sade:not(.yaziyor) .baslangic-grubu {
+        display: none;
+    }
+
+    #kontrol-paneli.sade > .hedef-grubu {
+        order: -1;
+        margin-bottom: 12px;
+    }
+
+    #kontrol-paneli.sade:not(.yaziyor) > #kisayollar {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        padding-bottom: 6px;
+    }
+
+    #kisayollar button,
+    #kisayollar button:hover {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 9px;
+        padding: 4px 0;
+        background: transparent;
+        color: var(--yazi-ana);
+        font-size: 14px;
+    }
+
+    /* Elmas çini karosu */
+    #kisayollar span {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 38px;
+        height: 38px;
+        margin-top: 6px;
+        border: 2.5px solid white;
+        border-radius: 5px;
+        background: var(--dugme);
+        box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+        transform: rotate(45deg);
+    }
+
+    #kisayollar b {
+        transform: rotate(-45deg);
+        color: white;
+        font-size: 18px;
+        font-weight: 400;
+    }
+
+    #kisayollar [data-kategori="yemek"] span { background: var(--mercan); }
+    #kisayollar [data-kategori="spor"] span  { background: var(--firuze); }
+    #kisayollar #diger span                  { background: #6b4f9c; }
+
+    #kisayollar button.secili {
+        font-weight: 700;
+        text-decoration: underline;
+        text-underline-offset: 4px;
+    }
+
+    #kisayollar button.secili span {
+        outline: 3px solid var(--cizgi);
+    }
+
+    .acilir-liste div.liste-eylem {
+        font-weight: 700;
+        background: var(--sir-golge);
+    }
+
+    /* Küçük arama penceresi: ince satırlar, ince bordür */
+    #kontrol-paneli.yaziyor::before {
+        height: 10px;
+        background-size: 10px 10px;
+    }
+
+    #kontrol-paneli.yaziyor > .aktif {
+        margin-top: 8px;
+    }
+
+    #kontrol-paneli.yaziyor .aktif label {
+        margin-bottom: 4px;
+        font-size: 12px;
+    }
+
+    #kontrol-paneli.yaziyor .aktif input {
+        padding: 8px 10px;
+    }
+
+    #kontrol-paneli.yaziyor .acilir-liste div {
+        padding: 9px 10px;
+        font-size: 15px;
+    }
+
+    #kontrol-paneli.yaziyor .acilir-liste div.liste-tumu {
+        color: var(--metin-soluk);
+        font-size: 13px;
+        text-align: center;
+    }
+
+    #kontrol-paneli.yaziyor .acilir-liste div.liste-bos {
+        color: var(--metin-soluk);
+        cursor: default;
+    }
+
+    /* Nokta işaretle ve Buradayım yan yana */
+    #kontrol-paneli.yaziyor .acilir-liste div.liste-eylemler {
+        display: flex;
+        padding: 0;
+        background: transparent;
+    }
+
+    #kontrol-paneli.yaziyor .liste-eylemler div {
+        flex: 1;
+        border-bottom: none;
+        font-size: 13px;
+        text-align: center;
+    }
+
+    #kontrol-paneli.yaziyor .liste-eylemler div + div {
+        border-left: 1px solid var(--cizgi);
+    }
+}
+
+/* Değişen alan firuze renkte parlar */
+@keyframes parla {
+    0%, 35% { background-color: var(--parlama); box-shadow: 0 0 0 4px rgba(17, 127, 123, 0.4); }
+    100%    { box-shadow: 0 0 0 4px rgba(17, 127, 123, 0); }
+}
+
+.acilir-liste div {
+    color: var(--yazi-ana);
+}
+
+.acilir-liste div:hover {
+    background-color: var(--dugme);
+    color: #fff;
+}
+
+/* Pinler çini karosu gibi elmas biçiminde (sivri ucu yeri gösterir) */
+.hedef-pin-sekil {
+    border-radius: 4px;
+}
+
+/* Sayılı gruplar da elmas */
+.kume span {
+    width: 28px;
+    height: 28px;
+    margin: 4px;
+    border-radius: 4px;
+    transform: rotate(45deg);
+}
+
+.kume b {
+    transform: rotate(-45deg);
+}
+
+/* Başlangıç ve bitiş: hat üzerindeki duraklar */
+.uc-A,
+.uc-B {
+    border: 4px solid var(--cizgi);
+    background: var(--alan);
+    color: var(--yazi-ana);
+}
+
+.uc-B {
+    border-color: var(--mercan);
+    color: var(--mercan);
+}
+
+/* Yer kartı ve pencereler */
+.leaflet-popup-content-wrapper {
+    border-radius: var(--kose);
+    border-top: 6px solid var(--cizgi);
+}
+
+.bilgi-karti strong,
+#paylas-penceresi h4,
+#nokta-penceresi h4 {
+    color: var(--yazi-ana);
+}
+
+.bilgi-karti button,
+.bilgi-karti .kart-paylas {
+    border: 1.5px solid var(--cizgi);
+    color: var(--yazi-ana);
+}
+
+.bilgi-karti button.ana {
+    background: var(--dugme);
+    color: #fff;
+}
+
+#paylas-penceresi,
+#nokta-penceresi {
+    border-radius: var(--kose);
+    border-top: 8px solid var(--cizgi);
+    background: var(--sir);
+}
+
+.leaflet-bar a {
+    color: var(--yazi-ana);
+}
+
+@media (max-width: 768px) {
+    /* Etiket yakınlaştırma düğmelerinin altında durur */
+    #kontrol-paneli {
+        border-radius: 10px 10px 0 0;
+    }
+
+    #kontrol-paneli::before {
+        order: -3;
+        flex-shrink: 0;
+        height: 20px;
+        margin: 0 -16px;
+        border-radius: 0;
+    }
+
+    #yer-karti {
+        border-radius: 10px 10px 0 0;
+        background: var(--sir);
+    }
+
+    #yer-karti::before {
+        content: "";
+        display: block;
+        height: 20px;
+        margin: 0 -16px;
+        background: var(--cini) repeat-x;
+    }
+
+    #yer-karti .kart-kapat {
+        top: 32px;
+        border-radius: var(--kose);
+        background: var(--sir-golge);
+        color: var(--yazi-ana);
+    }
+
+    #panel-tutamac,
+    #panel-tutamac:hover {
+        background: transparent;
+    }
+
+    #yer-karti .bilgi-karti .kart-paylas {
+        background: var(--sir);
+    }
+}
+
+/* ==========================================================
+   KOYU PANEL (isteğe bağlı). Yalnızca panel, kart ve pencereler
+   koyulaşır; harita aynı kalır.
+   ========================================================== */
+html.koyu {
+    color-scheme: dark;
+    --sir: #16233f;
+    --sir-golge: #223257;
+    --alan: #223257;
+    --yazi-ana: #eef4f3;
+    --metin-soluk: #a9b7d4;
+    --cizgi: #5872ad;
+    --dugme: #3360c4;
+    --parlama: #2d5a66;
+}
+
+html.koyu .acilir-liste,
+html.koyu .bilgi-karti button:not(.ana):not(.onay),
+html.koyu .leaflet-popup-content-wrapper,
+html.koyu .leaflet-popup-tip,
+html.koyu #paylas-link,
+html.koyu #nokta-penceresi input,
+html.koyu .leaflet-bar a {
+    background: var(--sir);
+    color: var(--yazi-ana);
+}
+
+html.koyu .acilir-liste,
+html.koyu .acilir-liste div,
+html.koyu .leaflet-bar a {
+    border-color: var(--sir-golge);
+}
+
+html.koyu .acilir-liste div:hover {
+    background-color: var(--dugme);
+}
+
+html.koyu .acilir-liste div.liste-eylem {
+    background: var(--sir-golge);
+}
+
+html.koyu #paylas-penceresi,
+html.koyu #nokta-penceresi,
+html.koyu #paylas-penceresi .secenek {
+    color: var(--yazi-ana);
+}
+
+html.koyu #paylas-rota,
+html.koyu #nokta-uyari,
+html.koyu #nokta-penceresi label,
+html.koyu #paylas-bilgi {
+    color: var(--metin-soluk);
+}
+
+html.koyu #gps-uyari,
+html.koyu #nokta-hata {
+    color: #ffb4a8;
+}
+
+html.koyu #kategoriler button:not(.secili) {
+    color: var(--yazi-ana);
+}
+
+html.koyu #kategoriler button:not(.secili) svg {
+    color: var(--renk);
+    filter: brightness(1.7);
+}
+
+/* Koyu temada harita da kısılır: renkler ters çevrilmez, yalnızca parlaklık düşer.
+   Daha açık veya koyu için brightness değeri değiştirilir (1 = kısılmamış) */
+html.koyu .leaflet-tile-pane {
+    filter: brightness(0.45) saturate(0.8);
+}
+
+/* Harita üstündeki işaretler de haritaya uyacak kadar kısılır.
+   Mavi konum noktası ve seçili pin parlak kalır ki hemen bulunsun */
+html.koyu .hedef-pin-sekil,
+html.koyu .kume span,
+html.koyu .uc-isareti,
+html.koyu .ozel-isaret span {
+    filter: brightness(0.72) saturate(0.85);
+}
+
+html.koyu .secili-pin .hedef-pin-sekil {
+    filter: none;
+}
+
+/* Henüz yüklenmemiş harita parçaları parlak görünmesin */
+html.koyu #harita {
+    background: #3a3935;
+}
+
+/* Haritadaki A ve B durakları iki temada da aynı */
+.uc-A,
+.uc-B {
+    background: #fff;
+}
+
+.uc-A {
+    border-color: #1d3c8c;
+    color: #1d3c8c;
+}
+
+/* Açık / koyu düğmesi */
+/* Masaüstü: etiket ve tema düğmesi panel başlığında */
+#kontrol-paneli header {
+    position: relative;
+}
+
+#kontrol-paneli header #yaya-etiketi {
+    margin-top: 10px;
+}
+
+#tema-dugmesi,
+#tema-dugmesi:hover,
+#konum-dugmesi,
+#konum-dugmesi:hover {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    border: 2px solid var(--cizgi);
+    background: var(--sir);
+    color: var(--yazi-ana);
+    font-size: 18px;
+}
+
+#tema-dugmesi,
+#tema-dugmesi:hover {
+    position: absolute;
+    bottom: 0;          /* yaya etiketiyle aynı satırda durur */
+    right: 0;
+}
+
+/* "Konumuma git" masaüstünde yakınlaştırma düğmelerinin üstünde durur */
+#konum-dugmesi,
+#konum-dugmesi:hover {
+    position: absolute;
+    right: 10px;
+    bottom: 108px;
+    z-index: 999;
+}
+
+/* Telefon: etiket sol üstte, düğmeler sağ üstte alt alta */
+@media (max-width: 768px) {
+    #yaya-etiketi {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        z-index: 999;
+        font-size: 13px;
+        pointer-events: none;
+    }
+
+    #tema-dugmesi,
+    #tema-dugmesi:hover,
+    #konum-dugmesi,
+    #konum-dugmesi:hover {
+        position: absolute;
+        right: 10px;
+        bottom: auto;
+        z-index: 999;
+        width: 44px;
+        height: 44px;
+    }
+
+    #tema-dugmesi,
+    #tema-dugmesi:hover {
+        top: 32px;
+    }
+
+    #konum-dugmesi,
+    #konum-dugmesi:hover {
+        top: 84px;
     }
 }
