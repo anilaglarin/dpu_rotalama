@@ -280,6 +280,10 @@ http://127.0.0.1:5000
 
 Bu proje, **Bursa Büyükşehir Belediyesi Trafik Şube Müdürlüğü**'nde tamamladığım donanım stajı sürecinde geliştirilmiştir. Staj boyunca Trafik Yönetim Merkezi (TYM) bünyesinde akıllı kavşakların merkezle haberleşme altyapısını, fiber optik hatları ve ağ cihazlarının çalışma prensiplerini sahada inceleme fırsatı buldum. Edindiğim bu teknik bilgiyi uygulamalı bir modellemeyle desteklemek amacıyla QGIS ile gerçek harita verileri üzerinde rota analizi gerçekleştirdim ve bu projeyi geliştirdim.
 
+### Yapay Zekâ Destekli Geliştirme Süreci
+
+Proje, staj sürecimde Claude Code kullanılmadan ortaya çıktı. Sonraki geliştirme aşamasında Claude Code'u iş akışıma entegre ettim. Hedefim, yapay zekâ destekli geliştirme araçlarının çalışma mantığını derinlemesine kavramak ve modern yazılım mühendisliği pratiklerine uyum sağlamak. Bu süreçte değişiklikleri önce planlıyor, ardından kod farklarını inceleyip davranışı test ederek ilerlemeyi esas alıyorum.
+
 ---
 
 ## 📄 Telif Hakkı
