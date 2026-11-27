@@ -17,6 +17,13 @@ CORS(app)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 DATA_DIR = os.path.join(BASE_DIR, "static", "data")
 
+def metre_mesafe(a, b) -> float:
+    """İki [boylam, enlem] noktası arasındaki yaklaşık mesafe (metre)."""
+    ort_enlem = math.radians((a[1] + b[1]) / 2)
+    dx = (a[0] - b[0]) * 111320 * math.cos(ort_enlem)
+    dy = (a[1] - b[1]) * 110540
+    return math.hypot(dx, dy)
+
 # 1. VERİLERİ OKUMA VE AĞ KURULUMU
 def ag_olustur() -> nx.Graph:
     ag = nx.Graph()
@@ -38,7 +45,7 @@ def ag_olustur() -> nx.Graph:
             for cizgi in cizgiler:
                 koordinatlar = list(cizgi.coords)
                 for i in range(len(koordinatlar) - 1):
-                    mesafe = math.dist(koordinatlar[i], koordinatlar[i+1])
+                    mesafe = metre_mesafe(koordinatlar[i], koordinatlar[i+1])
                     ag.add_edge(koordinatlar[i], koordinatlar[i+1], weight=mesafe)
                     
         print(f"--- Harita Ağı Hazır! Toplam Kavşak: {ag.number_of_nodes()} ---")
@@ -53,18 +60,11 @@ def en_yakin_kavsagi_bul(hedef_x: float, hedef_y: float, ag: nx.Graph):
     en_kisa_mesafe = float('inf')
     en_yakin_dugum = None
     for dugum in ag.nodes():
-        mesafe = math.dist((hedef_x, hedef_y), dugum)
+        mesafe = metre_mesafe((hedef_x, hedef_y), dugum)
         if mesafe < en_kisa_mesafe:
             en_kisa_mesafe = mesafe
             en_yakin_dugum = dugum
     return en_yakin_dugum
-
-def metre_mesafe(a, b) -> float:
-    """İki [boylam, enlem] noktası arasındaki yaklaşık mesafe (metre)."""
-    ort_enlem = math.radians((a[1] + b[1]) / 2)
-    dx = (a[0] - b[0]) * 111320 * math.cos(ort_enlem)
-    dy = (a[1] - b[1]) * 110540
-    return math.hypot(dx, dy)
 
 def koordinat_gecerli_mi(deger) -> bool:
     """Değer [boylam, enlem] biçiminde iki geçerli sayı mı?"""
